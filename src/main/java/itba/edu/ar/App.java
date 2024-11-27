@@ -8,7 +8,7 @@ import java.io.IOException;
 public class App {
     public static void main(String[] args) {
         // Cargar configuración
-        Config config = ConfigLoader.load("config.json");
+        Config config = ConfigLoader.load("config/config.json");
 
         // Crear directorio de salida si no existe
         OutputHandler.createOutputDirectory(config.getOutputDirectory());

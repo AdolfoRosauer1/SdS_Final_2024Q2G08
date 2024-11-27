@@ -4,13 +4,17 @@ import itba.edu.ar.simulation.Agent;
 import itba.edu.ar.simulation.Simulation;
 import itba.edu.ar.simulation.SimulationSnapshot;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
 public class OutputHandler {
     public static void createOutputDirectory(String outputDirectory) {
-//        TODO: implement
+        File directory = new File(outputDirectory);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
     }
 
     public static void saveResults(Simulation simulation, String outputDirectory) throws IOException {

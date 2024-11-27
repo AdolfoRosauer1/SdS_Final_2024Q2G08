@@ -12,9 +12,15 @@ public class Config {
     private double timeStep;
     private int realizations;
     private String outputDirectory;
+    private boolean saveSnapshots;
+    private double minRadius;
+    private double maxRadius;
+    private double relaxationTime;
+    private double cpmBeta;
 
     public Config(){}
 
+    
     public double getArenaRadius() {
         return arenaRadius;
     }
@@ -101,5 +107,55 @@ public class Config {
 
     public void setOutputDirectory(String outputDirectory) {
         this.outputDirectory = outputDirectory;
+    }
+
+
+    public boolean isSaveSnapshots() {
+        return saveSnapshots;
+    }
+
+
+    public void setSaveSnapshots(boolean saveSnapshots) {
+        this.saveSnapshots = saveSnapshots;
+    }
+
+
+    public double getMinRadius() {
+        return minRadius;
+    }
+
+
+    public void setMinRadius(double minRadius) {
+        this.minRadius = minRadius;
+    }
+
+
+    public double getMaxRadius() {
+        return maxRadius;
+    }
+
+
+    public void setMaxRadius(double maxRadius) {
+        this.maxRadius = maxRadius;
+    }
+
+
+    public double getRelaxationTime() {
+        return relaxationTime;
+    }
+
+
+    public void setRelaxationTime(double relaxationTime) {
+        this.relaxationTime = relaxationTime;
+    }
+
+
+    public double getCpmBeta() {
+        return cpmBeta;
+    }
+
+
+    public void setCpmBeta(double cpmBeta) {
+        this.cpmBeta = cpmBeta;
     }
 }
