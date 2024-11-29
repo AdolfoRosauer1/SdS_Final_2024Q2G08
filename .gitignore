@@ -36,3 +36,13 @@ build/
 
 ### Mac OS ###
 .DS_Store
+src/main/java/itba/edu/ar/examples/Player.java
+
+# CSV files
+*.csv
+
+### Python ###
+.venv
+
+### Animation ###
+analysis/animation/exports

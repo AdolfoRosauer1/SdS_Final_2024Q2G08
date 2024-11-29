@@ -4,8 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Agent {
+    // Simulation parameters
+    private final Config config;
+    private final List<Agent> agents;
+
     // Agent identification
-    private int id;
+    private final int id;
     private AgentType type;
 
     // Agent state
@@ -21,32 +25,33 @@ public class Agent {
 
     // Physical properties
     private double radius;
-    private double minRadius;
-    private double maxRadius;
-    private double relaxationTime;
-    private final double CPM_BETA;
+    private final double minRadius;
+    private final double maxRadius;
+    private final double relaxationTime;
+    private final double CPM_BETA = 1.0;
 
     // List of contacts with other agents
-    private List<Agent> contacts;
+    private final List<Agent> contacts;
 
-    public Agent(int id, AgentType type, double speed, double arenaRadius, double minRadius, double maxRadius, double relaxationTime, double cpmBeta) {
-        this.id = id; // Initialize id
+    public Agent(int id, AgentType type, List<Agent> agents, Config config) {
+        this.id = id;
         this.type = type;
-        this.speed = speed;
+        this.speed = type == AgentType.HUMAN ? config.getHumanSpeed() : config.getZombieSpeed();
         this.isInContact = false;
         this.contactStartTime = 0.0;
         this.contactAgent = null;
-        this.minRadius = minRadius;
-        this.radius = maxRadius;
-        this.maxRadius = maxRadius;
-        this.relaxationTime = relaxationTime;
-        this.CPM_BETA = cpmBeta;
+        this.minRadius = config.getMinRadius();
+        this.radius = config.getMaxRadius();
+        this.maxRadius = config.getMaxRadius();
+        this.relaxationTime = config.getRelaxationTime();
+        this.agents = agents;
+        this.config = config;
 
         // Inicializar posición aleatoria dentro del área permitida
-        this.position = PositionInitializer.initializePosition(arenaRadius);
+        this.position = PositionInitializer.initializePosition(config.getArenaRadius());
         this.velocity = new Vector2D(0, 0);
-        this.desiredDirection = new Vector2D(0, 0); // Initialize desiredDirection
-        this.contacts = new ArrayList<>(); // Initialize contacts list
+        this.desiredDirection = new Vector2D(0, 0);
+        this.contacts = new ArrayList<>();
     }
 
     public Agent(Agent agent) {
@@ -63,16 +68,31 @@ public class Agent {
         this.minRadius = agent.minRadius;
         this.maxRadius = agent.maxRadius;
         this.relaxationTime = agent.relaxationTime;
-        this.CPM_BETA = agent.CPM_BETA;
         this.contacts = new ArrayList<>(agent.contacts);
+        this.agents = agent.agents;
+        this.config = agent.config;
     }
 
     public void setCPMVelocity() {
+        // If agent is in infection period, velocity should be zero
+        if (isInContact && contactAgent != null && 
+            (config.getCurrentTime() - contactStartTime < config.getContactDuration())) {
+            this.velocity = new Vector2D(0, 0);
+            return;
+        }
+
         if (contacts.isEmpty()) {
-            // Free movement - velocity proportional to available space
+            // Free movement - velocity should be proportional to normalized radius
             double normalizedRadius = (this.radius - this.minRadius) / (this.maxRadius - this.minRadius);
+            // Clamp normalized radius between 0 and 1
             normalizedRadius = Math.max(0, Math.min(1, normalizedRadius));
+            // Key difference: Use power function directly with normalized radius
             double desiredSpeed = this.speed * Math.pow(normalizedRadius, CPM_BETA);
+
+            if (desiredDirection.magnitude() < 1e-10) {
+                double angle = Math.random() * 2 * Math.PI;
+                this.desiredDirection = new Vector2D(Math.cos(angle), Math.sin(angle));
+            }
 
             if (desiredDirection.magnitude() < 1e-10) {
                 this.velocity = new Vector2D(0, 0);
@@ -82,25 +102,29 @@ public class Agent {
             Vector2D normalizedDirection = desiredDirection.normalize();
             this.velocity = normalizedDirection.multiply(desiredSpeed);
         } else {
-            // Escape velocity when in contact
+            // Escape velocity when in contact - use maximum speed
             Vector2D escapeDirection = new Vector2D(0, 0);
             for (Agent other : contacts) {
                 Vector2D diff = this.position.subtract(other.position);
-                if (diff.magnitude() < 1e-10) continue;
-                escapeDirection = escapeDirection.add(diff.normalize());
+                double distance = diff.magnitude();
+                if (distance < 1e-10) distance = 1e-10;
+                escapeDirection = escapeDirection.add(diff.divide(distance)); // Normalized direction
             }
 
             if (escapeDirection.magnitude() > 1e-10) {
                 escapeDirection = escapeDirection.normalize();
+                // Key difference: Use full speed for escape velocity
                 this.velocity = escapeDirection.multiply(this.speed);
             } else {
                 this.velocity = new Vector2D(0, 0);
             }
-            contacts.clear();
+            // Don't clear contacts here - it's handled in calculateRadius
         }
     }
 
-    public void calculateRadius(double dt, List<Agent> agents) {
+    public void calculateRadius(double dt) {
+        contacts.clear();
+        
         for (Agent other : agents) {
             if (other == this) continue;
             
@@ -108,26 +132,155 @@ public class Agent {
             double distance = diff.magnitude();
             if (distance < 1e-10) distance = 1e-10;
 
+            // Check if agents are in contact
             if (distance < (this.radius + other.radius)) {
                 contacts.add(other);
                 other.addContact(this);
+                
+                // Handle infection logic
+                if (this.type != other.type) {
+                    if (!this.isInContact || this.contactAgent != other) {
+                        // New contact with different type - set contact state for both agents
+                        this.isInContact = true;
+                        this.contactStartTime = config.getCurrentTime();
+                        this.contactAgent = other;
+                        
+                        // Synchronize the other agent's contact state
+                        other.setInContact(true);
+                        other.setContactStartTime(config.getCurrentTime());
+                        other.setContactAgent(this);
+                    } else if (config.getCurrentTime() - this.contactStartTime >= config.getContactDuration()) {
+                        // Contact duration exceeded, attempt infection
+                        double infectionRoll = Math.random();
+                        if (infectionRoll < config.getProbabilityInfection()) {
+                            if (this.type == AgentType.HUMAN) {
+                                this.type = AgentType.ZOMBIE;
+                                this.speed = config.getZombieSpeed();
+                            } else {
+                                this.type = AgentType.HUMAN;
+                                this.speed = config.getHumanSpeed();
+                            }
+                        }
+                        // Reset contact state for both agents
+                        this.isInContact = false;
+                        this.contactAgent = null;
+                        other.setInContact(false);
+                        other.setContactAgent(null);
+                    }
+                }
+                
+                // Contract radius for any contact
                 other.contract();
+                this.contract();
             }
         }
 
+        // Handle radius changes
         if (contacts.isEmpty()) {
-            // Expand radius
+            // No contacts - expand radius
+            this.isInContact = false;
+            this.contactAgent = null;
             this.radius += (this.maxRadius - this.radius) * (dt / this.relaxationTime);
             this.radius = Math.min(this.radius, this.maxRadius);
-        } else {
-            // Contract radius
-            contract();
         }
     }
 
     public void updatePosition(double dt) {
         // Update position based on velocity
-        this.position = this.position.add(velocity.multiply(dt));
+        setCPMVelocity();
+        Vector2D newPosition = this.position.add(this.velocity.multiply(dt));
+
+        // Improved boundary handling
+        double distanceFromCenter = newPosition.magnitude();
+        if (distanceFromCenter > config.getArenaRadius() - this.radius) {
+            // Reflect the position and velocity off the boundary
+            Vector2D normal = newPosition.normalize();
+            newPosition = normal.multiply(config.getArenaRadius() - this.radius);
+            this.velocity = this.velocity.subtract(normal.multiply(2 * this.velocity.dot(normal)));
+            this.position = newPosition;
+        } else {
+            this.position = newPosition;
+        }
+
+        calculateRadius(dt);
+        updateDesiredDirection();
+    }
+
+    public void updateDesiredDirection() {
+        if (this.type == AgentType.HUMAN) {
+            // Social Force Model for humans
+            Vector2D socialForce = new Vector2D(0, 0);
+            Vector2D escapeForce = new Vector2D(0, 0);
+            
+            for (Agent other : agents) {
+                if (other == this) continue;
+                
+                Vector2D diff = this.position.subtract(other.position);
+                double distance = diff.magnitude();
+                if (distance < 1e-10) continue;
+                
+                Vector2D direction = diff.normalize();
+                
+                // Social force from other agents
+                double socialForceMagnitude = Math.exp(-distance / config.getSocialForceRadius());
+                Vector2D currentSocialForce = direction.multiply(socialForceMagnitude);
+                
+                // Additional escape force from zombies
+                if (other.getType() == AgentType.ZOMBIE) {
+                    double escapeForceMagnitude = 2.0 * Math.exp(-distance / config.getZombieDetectionRadius());
+                    Vector2D currentEscapeForce = direction.multiply(escapeForceMagnitude);
+                    escapeForce = escapeForce.add(currentEscapeForce);
+                }
+                
+                socialForce = socialForce.add(currentSocialForce);
+            }
+            
+            // Boundary repulsion
+            Vector2D boundaryForce = calculateBoundaryForce();
+            
+            // Combine all forces
+            Vector2D totalForce = socialForce.multiply(config.getSocialForceWeight())
+                    .add(escapeForce.multiply(config.getEscapeForceWeight()))
+                    .add(boundaryForce.multiply(config.getBoundaryForceWeight()));
+            
+            if (totalForce.magnitude() > 1e-10) {
+                this.desiredDirection = totalForce.normalize();
+            }
+            
+        } else {
+            // Zombie behavior - pursue nearest human
+            Agent nearestHuman = null;
+            double minDistance = Double.MAX_VALUE;
+            
+            for (Agent other : agents) {
+                if (other.getType() == AgentType.HUMAN) {
+                    double distance = this.position.subtract(other.position).magnitude();
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        nearestHuman = other;
+                    }
+                }
+            }
+            
+            if (nearestHuman != null) {
+                Vector2D pursuitDirection = nearestHuman.getPosition().subtract(this.position);
+                if (pursuitDirection.magnitude() > 1e-10) {
+                    this.desiredDirection = pursuitDirection.normalize();
+                }
+            }
+        }
+    }
+
+    private Vector2D calculateBoundaryForce() {
+        double distanceToCenter = position.magnitude();
+        double arenaRadius = config.getArenaRadius();
+        
+        if (distanceToCenter > arenaRadius * 0.8) {
+            Vector2D toCenter = position.multiply(-1.0);
+            double forceMagnitude = Math.exp((distanceToCenter - arenaRadius) / (0.2 * arenaRadius));
+            return toCenter.normalize().multiply(forceMagnitude);
+        }
+        return new Vector2D(0, 0);
     }
 
     public void contract() {
@@ -146,16 +299,8 @@ public class Agent {
         return id;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
     public AgentType getType() {
         return type;
-    }
-
-    public void setType(AgentType type) {
-        this.type = type;
     }
 
     public Vector2D getPosition() {
@@ -212,5 +357,45 @@ public class Agent {
 
     public void setContactAgent(Agent contactAgent) {
         this.contactAgent = contactAgent;
+    }
+
+    public Config getConfig() {
+        return config;
+    }
+
+    public List<Agent> getAgents() {
+        return agents;
+    }
+
+    public void setType(AgentType type) {
+        this.type = type;
+    }
+
+    public Vector2D getDesiredDirection() {
+        return desiredDirection;
+    }
+
+    public void setDesiredDirection(Vector2D desiredDirection) {
+        this.desiredDirection = desiredDirection;
+    }
+
+    public double getMinRadius() {
+        return minRadius;
+    }
+
+    public double getMaxRadius() {
+        return maxRadius;
+    }
+
+    public double getRelaxationTime() {
+        return relaxationTime;
+    }
+
+    public double getCPM_BETA() {
+        return CPM_BETA;
+    }
+
+    public List<Agent> getContacts() {
+        return contacts;
     }
 }

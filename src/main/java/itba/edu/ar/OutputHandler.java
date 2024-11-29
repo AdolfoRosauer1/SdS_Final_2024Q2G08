@@ -26,7 +26,7 @@ public class OutputHandler {
         FileWriter csvWriter = new FileWriter(filename);
 
         // Escribir encabezados
-        csvWriter.append("Time,AgentID,AgentType,PosX,PosY\n");
+        csvWriter.append("Time,AgentID,AgentType,PosX,PosY,Radius\n");
 
         // Escribir datos de cada snapshot
         for (SimulationSnapshot snapshot : snapshots) {
@@ -36,7 +36,8 @@ public class OutputHandler {
                 csvWriter.append(agent.getId() + ",");
                 csvWriter.append(agent.getType().toString() + ",");
                 csvWriter.append(agent.getPosition().getX() + ",");
-                csvWriter.append(agent.getPosition().getY() + "\n");
+                csvWriter.append(agent.getPosition().getY() + ",");
+                csvWriter.append(agent.getRadius() + "\n");
             }
         }
 

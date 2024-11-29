@@ -1,22 +1,37 @@
 package itba.edu.ar.simulation;
 
 public class Config {
+    // CPM Parameters
+    private double cpmBeta;
+
+    // Social Force Parameters
+    private double socialForceWeight;
+    private double escapeForceWeight;
+    private double boundaryForceWeight;
+    private double socialForceRadius;
+    private double zombieDetectionRadius;
+
+    // Simulation Parameters
     private double arenaRadius;
+    private double simulationTime;
+    private double currentTime = 0.0;
+    private double timeStep;
+    private int realizations;
+    private String outputDirectory;
+    private boolean saveSnapshots;
+
+    // Zombies/Humans Parameters
     private int initialHumans;
     private int initialZombies;
     private double humanSpeed;
     private double zombieSpeed;
     private double contactDuration;
     private double probabilityInfection;
-    private double simulationTime;
-    private double timeStep;
-    private int realizations;
-    private String outputDirectory;
-    private boolean saveSnapshots;
+
+    // Physical Properties
     private double minRadius;
     private double maxRadius;
     private double relaxationTime;
-    private double cpmBeta;
 
     public Config(){}
 
@@ -157,5 +172,65 @@ public class Config {
 
     public void setCpmBeta(double cpmBeta) {
         this.cpmBeta = cpmBeta;
+    }
+
+
+    public double getCurrentTime() {
+        return currentTime;
+    }
+
+
+    public void setCurrentTime(double currentTime) {
+        this.currentTime = currentTime;
+    }
+
+
+    public double getSocialForceWeight() {
+        return socialForceWeight;
+    }
+
+
+    public void setSocialForceWeight(double socialForceWeight) {
+        this.socialForceWeight = socialForceWeight;
+    }
+
+
+    public double getEscapeForceWeight() {
+        return escapeForceWeight;
+    }
+
+
+    public void setEscapeForceWeight(double escapeForceWeight) {
+        this.escapeForceWeight = escapeForceWeight;
+    }
+
+
+    public double getBoundaryForceWeight() {
+        return boundaryForceWeight;
+    }
+
+
+    public void setBoundaryForceWeight(double boundaryForceWeight) {
+        this.boundaryForceWeight = boundaryForceWeight;
+    }
+
+
+    public double getSocialForceRadius() {
+        return socialForceRadius;
+    }
+
+
+    public void setSocialForceRadius(double socialForceRadius) {
+        this.socialForceRadius = socialForceRadius;
+    }
+
+
+    public double getZombieDetectionRadius() {
+        return zombieDetectionRadius;
+    }
+
+
+    public void setZombieDetectionRadius(double zombieDetectionRadius) {
+        this.zombieDetectionRadius = zombieDetectionRadius;
     }
 }

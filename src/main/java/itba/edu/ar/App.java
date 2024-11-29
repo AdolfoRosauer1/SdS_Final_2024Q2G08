@@ -14,7 +14,8 @@ public class App {
         OutputHandler.createOutputDirectory(config.getOutputDirectory());
 
         // Ejecutar múltiples realizaciones
-        for (int realization = 1; realization <= config.getRealizations(); realization++) {
+        int realizations = config.getRealizations();
+        for (int realization = 1; realization <= realizations; realization++) {
             // Inicializar simulación
             Simulation simulation = new Simulation(config, realization);
 
@@ -28,7 +29,8 @@ public class App {
                 System.err.println("Error al guardar los resultados: " + e.getMessage());
             }
 
-            System.out.println("Realización " + realization + " completada.");
+            // Mostrar progreso
+            System.out.printf("Realización %d de %d completada.\n", realization, realizations);
         }
 
         System.out.println("Todas las realizaciones han finalizado.");

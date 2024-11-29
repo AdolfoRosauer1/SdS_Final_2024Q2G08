@@ -24,13 +24,13 @@ public class Simulation {
         // Inicializar zombies
         int i;
         for (i = 0; i < config.getInitialZombies(); i++) {
-            Agent zombie = new Agent(i, AgentType.ZOMBIE, config.getZombieSpeed(), config.getArenaRadius(), config.getMinRadius(), config.getMaxRadius(), config.getRelaxationTime(), config.getCpmBeta());
+            Agent zombie = new Agent(i, AgentType.ZOMBIE, agents, config);
             agents.add(zombie);
         }
 
         // Inicializar humanos
         for (int j = 0; j < config.getInitialHumans(); j++) {
-            Agent human = new Agent(i+j, AgentType.HUMAN, config.getHumanSpeed(), config.getArenaRadius(), config.getMinRadius(), config.getMaxRadius(), config.getRelaxationTime(), config.getCpmBeta());
+            Agent human = new Agent(i+j, AgentType.HUMAN, agents, config);
             agents.add(human);
         }
     }
@@ -47,11 +47,16 @@ public class Simulation {
 
             // Incrementar tiempo
             currentTime += config.getTimeStep();
+            config.setCurrentTime(currentTime);
         }
     }
 
     private void updateAgents() {
-        // TODO: Implementar la lógica de actualización de los agentes
+        // Mover a los agentes
+        for (Agent agent : agents) {
+            agent.updatePosition(config.getTimeStep());
+        }
+
     }
 
     private void saveSnapshot() {
