@@ -132,10 +132,23 @@ public class Agent {
             double distance = diff.magnitude();
             if (distance < 1e-10) distance = 1e-10;
 
+            // Key change: Use current radii for collision detection
+            double combinedRadii = this.radius + other.radius;
+            // Add a small buffer to prevent numerical instability
+            double collisionDistance = combinedRadii * 1.0; // You can adjust this factor if needed
+
             // Check if agents are in contact
-            if (distance < (this.radius + other.radius)) {
+            if (distance < collisionDistance) {
                 contacts.add(other);
-                other.addContact(this);
+                
+                // Contract radius BEFORE adding contact to other agent
+                // to prevent recursive contractions
+                this.contract();
+                
+                // Only add contact to other agent if not already in contact
+                if (!other.getContacts().contains(this)) {
+                    other.addContact(this);
+                }
                 
                 // Handle infection logic
                 if (this.type != other.type) {
@@ -186,6 +199,10 @@ public class Agent {
     }
 
     public void updatePosition(double dt) {
+        if (isInInfectionPeriod()) {
+            handleInfection();
+            return;
+        }
         // Update position based on velocity
         setCPMVelocity();
         Vector2D newPosition = this.position.add(this.velocity.multiply(dt));
@@ -204,6 +221,18 @@ public class Agent {
 
         calculateRadius(dt);
         updateDesiredDirection();
+    }
+
+    public boolean isInInfectionPeriod() {
+        return isInContact && contactAgent != null && 
+            (config.getCurrentTime() - contactStartTime < config.getContactDuration());
+    }
+
+    public void handleInfection() {
+        // If agent is in infection period, velocity should be zero
+        if (isInInfectionPeriod()) {
+            this.velocity = new Vector2D(0, 0);
+        }
     }
 
     public void updateDesiredDirection() {
