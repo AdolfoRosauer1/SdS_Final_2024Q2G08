@@ -49,7 +49,7 @@ def create_animation(csv_path: str, output_dir: str, fps: int = 30, duration_sec
         
         # Plot each agent type with their respective colors and sizes
         # Multiply radius by a scale factor to make agents more visible
-        scale_factor = 100  # Adjust this value to make agents larger or smaller
+        scale_factor = 1  # Adjust this value to make agents larger or smaller
         ax.scatter(humans['PosX'], humans['PosY'], c='blue', s=humans['Radius']*scale_factor, alpha=0.6, label='Human')
         ax.scatter(zombies['PosX'], zombies['PosY'], c='red', s=zombies['Radius']*scale_factor, alpha=0.6, label='Zombie')
         
