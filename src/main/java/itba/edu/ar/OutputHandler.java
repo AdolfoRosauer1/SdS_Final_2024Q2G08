@@ -1,6 +1,7 @@
 package itba.edu.ar;
 
 import itba.edu.ar.simulation.Agent;
+import itba.edu.ar.simulation.FinishState;
 import itba.edu.ar.simulation.Simulation;
 import itba.edu.ar.simulation.SimulationSnapshot;
 
@@ -15,6 +16,21 @@ public class OutputHandler {
         if (!directory.exists()) {
             directory.mkdirs();
         }
+    }
+
+    public static void saveFinishStates(List<FinishState> finishStates, String outputDirectory, double probabilityInfection) throws IOException {
+        String filename = outputDirectory + "/finish_states_" + probabilityInfection + ".csv";
+        FileWriter csvWriter = new FileWriter(filename);
+
+        csvWriter.append("Id,Time,NumZombies,NumHumans\n");
+        int id = 1;
+        for (FinishState finishState : finishStates) {
+            csvWriter.append(id++ + "," + finishState.time + "," + finishState.num_zombies + ","
+                    + finishState.num_humans + "\n");
+        }
+
+        csvWriter.flush();
+        csvWriter.close();
     }
 
     public static void saveResults(Simulation simulation, String outputDirectory) throws IOException {

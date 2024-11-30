@@ -35,6 +35,31 @@ public class Config {
 
     public Config(){}
 
+    public Config(Config config) {
+        this.cpmBeta = config.cpmBeta;
+        this.socialForceWeight = config.socialForceWeight;
+        this.escapeForceWeight = config.escapeForceWeight;
+        this.boundaryForceWeight = config.boundaryForceWeight;
+        this.socialForceRadius = config.socialForceRadius;
+        this.zombieDetectionRadius = config.zombieDetectionRadius;
+        this.arenaRadius = config.arenaRadius;
+        this.simulationTime = config.simulationTime;
+        this.currentTime = config.currentTime;
+        this.timeStep = config.timeStep;
+        this.realizations = config.realizations;
+        this.outputDirectory = config.outputDirectory;
+        this.saveSnapshots = config.saveSnapshots;
+        this.initialHumans = config.initialHumans;
+        this.initialZombies = config.initialZombies;
+        this.humanSpeed = config.humanSpeed;
+        this.zombieSpeed = config.zombieSpeed;
+        this.contactDuration = config.contactDuration;
+        this.probabilityInfection = config.probabilityInfection;
+        this.minRadius = config.minRadius;
+        this.maxRadius = config.maxRadius;
+        this.relaxationTime = config.relaxationTime;
+    }
+
     
     public double getArenaRadius() {
         return arenaRadius;

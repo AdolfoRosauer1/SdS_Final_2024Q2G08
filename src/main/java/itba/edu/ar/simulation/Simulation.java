@@ -35,7 +35,7 @@ public class Simulation {
         }
     }
 
-    public void run() {
+    public FinishState run() {
         while (currentTime < config.getSimulationTime()) {
             // Actualizar estado de los agentes
             updateAgents();
@@ -48,7 +48,31 @@ public class Simulation {
             // Incrementar tiempo
             currentTime += config.getTimeStep();
             config.setCurrentTime(currentTime);
+            if (getAmountHumans() == 0 || getAmountZombies() == 0) {
+                break;
+            }
         }
+        return new FinishState(currentTime, getAmountZombies(), getAmountHumans());
+    }
+
+    public int getAmountZombies(){
+        int count = 0;
+        for (Agent agent : agents) {
+            if (agent.getType() == AgentType.ZOMBIE) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public int getAmountHumans(){
+        int count = 0;
+        for (Agent agent : agents) {
+            if (agent.getType() == AgentType.HUMAN) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private void updateAgents() {
