@@ -12,7 +12,7 @@ import os
 from matplotlib.patches import Circle
 import numpy as np
 
-def create_animation(csv_path, output_directory, fps, total_seconds):
+def create_animation(csv_path, output_directory, fps, start_time, total_seconds):
     """
     Creates an animation from simulation data and saves it as a GIF.
     
@@ -20,6 +20,7 @@ def create_animation(csv_path, output_directory, fps, total_seconds):
         csv_path (str): Path to the CSV file containing simulation data
         output_directory (str): Directory where the GIF will be saved
         fps (int): Frames per second for the animation
+        start_time (float): Start time of the animation in seconds
         total_seconds (float): Total duration of the animation in seconds
     """
     # Read the CSV file
@@ -29,8 +30,12 @@ def create_animation(csv_path, output_directory, fps, total_seconds):
     unique_times = sorted(df['Time'].unique())
     max_time = unique_times[-1]
     
+    # Filter data to only include times after start_time
+    df = df[df['Time'] >= start_time]
+    unique_times = sorted(df['Time'].unique())
+    
     # Adjust total_seconds if it exceeds simulation time
-    total_seconds = min(total_seconds, max_time)
+    total_seconds = min(total_seconds, max_time - start_time)
     
     # Set up the figure with a specific size and black background
     fig, ax = plt.subplots(figsize=(10, 10))
@@ -84,7 +89,7 @@ def create_animation(csv_path, output_directory, fps, total_seconds):
         ax.set_facecolor('white')
         
         # Calculate target time and find nearest available time
-        target_time = frame * (total_seconds / (fps * total_seconds))
+        target_time = start_time + frame * (total_seconds / (fps * total_seconds))
         actual_time = find_nearest_time(target_time)
         
         # Get data for current time step
@@ -136,8 +141,8 @@ def create_animation(csv_path, output_directory, fps, total_seconds):
 
 
 output_path = create_animation(
-    csv_path='simulation_results/realization_1.csv',
+    csv_path='simulation_results/realization_0.5_2.csv',
     output_directory='analysis/animation/exports',
-    fps=30,  # 30 frames per second
-    total_seconds=10.0  # Total duration of the animation
-)
+    fps=30,
+    start_time=250.0,
+    total_seconds=10.0)

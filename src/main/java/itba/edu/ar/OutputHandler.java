@@ -39,11 +39,15 @@ public class OutputHandler {
         int realizationNumber = simulation.getRealizationNumber();
 
         // Guardar datos en archivos CSV
-        String filename = outputDirectory + "/realization_" + realizationNumber + ".csv";
+        String filename = outputDirectory + "/realization_" +simulation.getConfig().getProbabilityInfection()+"_"+ realizationNumber + ".csv";
         FileWriter csvWriter = new FileWriter(filename);
+
+        String velFilename = outputDirectory + "/realization_" +simulation.getConfig().getProbabilityInfection()+"_"+ realizationNumber + "_vel.csv";
+        FileWriter velCsvWriter = new FileWriter(velFilename);
 
         // Escribir encabezados
         csvWriter.append("Time,AgentID,AgentType,PosX,PosY,Radius\n");
+        velCsvWriter.append("Time,zombiePercentage,averageVelocity\n");
 
         // Escribir datos de cada snapshot
         for (SimulationSnapshot snapshot : snapshots) {
@@ -56,8 +60,13 @@ public class OutputHandler {
                 csvWriter.append(agent.getPosition().getY() + ",");
                 csvWriter.append(agent.getRadius() + "\n");
             }
-        }
+            velCsvWriter.append(time + ",");
+            velCsvWriter.append(snapshot.zombiePercentage()+ ",");
+            velCsvWriter.append(snapshot.averageVelocity() + "\n");
 
+        }
+        velCsvWriter.flush();
+        velCsvWriter.close();
         csvWriter.flush();
         csvWriter.close();
     }

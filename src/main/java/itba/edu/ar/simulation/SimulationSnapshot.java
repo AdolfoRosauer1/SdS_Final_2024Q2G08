@@ -27,6 +27,30 @@ public class SimulationSnapshot {
         return totalVelocity.divide(agents.size()).magnitude();
     }
 
+    public double zombiePercentage() {
+        return (double) getAmountZombies() / (getAmountZombies() + getAmountHumans());
+    }
+
+    public int getAmountZombies() {
+        int count = 0;
+        for (Agent agent : agents) {
+            if (agent.getType() == AgentType.ZOMBIE) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public int getAmountHumans() {
+        int count = 0;
+        for (Agent agent : agents) {
+            if (agent.getType() == AgentType.HUMAN) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     public double getTime() {
         return time;
     }
