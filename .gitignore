@@ -41,6 +41,9 @@ src/main/java/itba/edu/ar/examples/Player.java
 # CSV files
 *.csv
 
+# Animation
+*.gif
+
 ### Python ###
 .venv
 

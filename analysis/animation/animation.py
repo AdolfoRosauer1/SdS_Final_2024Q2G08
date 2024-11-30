@@ -33,8 +33,7 @@ def create_animation(csv_path, output_directory, fps, total_seconds):
     total_seconds = min(total_seconds, max_time)
     
     # Set up the figure with a specific size and black background
-    fig, ax = plt.subplots(figsize=(10, 10), facecolor='black')
-    ax.set_facecolor('black')
+    fig, ax = plt.subplots(figsize=(10, 10))
     
     # Set the arena boundaries (radius 11 as specified)
     ARENA_RADIUS = 11
@@ -42,7 +41,7 @@ def create_animation(csv_path, output_directory, fps, total_seconds):
     ax.set_ylim(-ARENA_RADIUS, ARENA_RADIUS)
     
     # Draw the arena boundary
-    arena_boundary = Circle((0, 0), ARENA_RADIUS, fill=False, color='white', linestyle='--')
+    arena_boundary = Circle((0, 0), ARENA_RADIUS, fill=False, color='black', linestyle='--')
     ax.add_patch(arena_boundary)
     
     # Equal aspect ratio to ensure circles are round
@@ -55,7 +54,7 @@ def create_animation(csv_path, output_directory, fps, total_seconds):
     # Color mapping for agent types
     colors = {
         'HUMAN': 'blue',
-        'ZOMBIE': 'red'
+        'ZOMBIE': 'green'
     }
     
     def find_nearest_time(target_time):
@@ -78,11 +77,11 @@ def create_animation(csv_path, output_directory, fps, total_seconds):
         # Redraw arena boundary and settings
         ax.set_xlim(-ARENA_RADIUS, ARENA_RADIUS)
         ax.set_ylim(-ARENA_RADIUS, ARENA_RADIUS)
-        ax.add_patch(Circle((0, 0), ARENA_RADIUS, fill=False, color='white', linestyle='--'))
+        ax.add_patch(Circle((0, 0), ARENA_RADIUS, fill=False, color='black', linestyle='--'))
         ax.set_aspect('equal')
         ax.set_xticks([])
         ax.set_yticks([])
-        ax.set_facecolor('black')
+        ax.set_facecolor('white')
         
         # Calculate target time and find nearest available time
         target_time = frame * (total_seconds / (fps * total_seconds))
@@ -106,7 +105,7 @@ def create_animation(csv_path, output_directory, fps, total_seconds):
             -ARENA_RADIUS + 0.5, 
             ARENA_RADIUS - 1, 
             f'Time: {actual_time:.1f}s',
-            color='white',
+            color='black',
             fontsize=10
         )
     
@@ -129,9 +128,8 @@ def create_animation(csv_path, output_directory, fps, total_seconds):
         output_path,
         writer='pillow',
         fps=fps,
-        progress_callback=lambda i, n: print(f'Saving frame {i} of {n}')
+        progress_callback=lambda i, n: print(f'Saving frame {i}/{n}', end='\r')
     )
-    
     plt.close()
     
     return output_path
@@ -139,7 +137,7 @@ def create_animation(csv_path, output_directory, fps, total_seconds):
 
 output_path = create_animation(
     csv_path='simulation_results/realization_1.csv',
-    output_directory='output/animations',
+    output_directory='analysis/animation/exports',
     fps=30,  # 30 frames per second
     total_seconds=10.0  # Total duration of the animation
 )

@@ -132,20 +132,14 @@ public class Agent {
             double distance = diff.magnitude();
             if (distance < 1e-10) distance = 1e-10;
 
-            // Key change: Use current radii for collision detection
             double combinedRadii = this.radius + other.radius;
-            // Add a small buffer to prevent numerical instability
-            double collisionDistance = combinedRadii * 1.0; // You can adjust this factor if needed
+            double collisionDistance = combinedRadii * 1.0;
 
-            // Check if agents are in contact
             if (distance < collisionDistance) {
                 contacts.add(other);
                 
-                // Contract radius BEFORE adding contact to other agent
-                // to prevent recursive contractions
                 this.contract();
                 
-                // Only add contact to other agent if not already in contact
                 if (!other.getContacts().contains(this)) {
                     other.addContact(this);
                 }
@@ -158,20 +152,34 @@ public class Agent {
                         this.contactStartTime = config.getCurrentTime();
                         this.contactAgent = other;
                         
-                        // Synchronize the other agent's contact state
                         other.setInContact(true);
                         other.setContactStartTime(config.getCurrentTime());
                         other.setContactAgent(this);
                     } else if (config.getCurrentTime() - this.contactStartTime >= config.getContactDuration()) {
                         // Contact duration exceeded, attempt infection
                         double infectionRoll = Math.random();
+                        System.out.println("Infection roll: " + infectionRoll);
                         if (infectionRoll < config.getProbabilityInfection()) {
+                            // HUMAN to ZOMBIE
                             if (this.type == AgentType.HUMAN) {
+                                System.out.println("Infecting human");
                                 this.type = AgentType.ZOMBIE;
                                 this.speed = config.getZombieSpeed();
-                            } else {
+                            } else if (other.getType() == AgentType.HUMAN) {
+                                System.out.println("Infecting human");
+                                other.setType(AgentType.ZOMBIE);
+                                other.setSpeed(config.getZombieSpeed());
+                            }
+                        }else{
+                            // ZOMBIE to HUMAN
+                            if (this.type == AgentType.ZOMBIE) {
+                                System.out.println("Infecting zombie");
                                 this.type = AgentType.HUMAN;
                                 this.speed = config.getHumanSpeed();
+                            }else{
+                                System.out.println("Infecting zombie");
+                                other.setType(AgentType.HUMAN);
+                                other.setSpeed(config.getHumanSpeed());
                             }
                         }
                         // Reset contact state for both agents
@@ -182,7 +190,6 @@ public class Agent {
                     }
                 }
                 
-                // Contract radius for any contact
                 other.contract();
                 this.contract();
             }
@@ -200,9 +207,10 @@ public class Agent {
 
     public void updatePosition(double dt) {
         if (isInInfectionPeriod()) {
-            handleInfection();
+            handleInfectionFreeze();
             return;
         }
+        handleInfection();
         // Update position based on velocity
         setCPMVelocity();
         Vector2D newPosition = this.position.add(this.velocity.multiply(dt));
@@ -222,13 +230,43 @@ public class Agent {
         calculateRadius(dt);
         updateDesiredDirection();
     }
+    private void handleInfection() {
+        if (!isInInfectionPeriod() && isInContact) {
+            // Validate contactAgent is not null before using it
+            if (contactAgent == null) {
+                return;
+            }
+
+            double turnRoll = Math.random();
+            if (turnRoll < config.getProbabilityInfection()) {
+                // Turn both agents to Zombie
+                this.type = AgentType.ZOMBIE;
+                this.speed = config.getZombieSpeed();
+                contactAgent.setType(AgentType.ZOMBIE);
+                contactAgent.setSpeed(config.getZombieSpeed());
+            } else {
+                // Turn both agents to Human
+                this.type = AgentType.HUMAN;
+                this.speed = config.getHumanSpeed();
+                contactAgent.setType(AgentType.HUMAN);
+                contactAgent.setSpeed(config.getHumanSpeed());
+            }
+
+            // Reset contact state for both agents
+            this.isInContact = false;
+            contactAgent.setInContact(false);
+            contactAgent.setContactAgent(null);
+            this.contactAgent = null;
+        }
+    }
+
 
     public boolean isInInfectionPeriod() {
         return isInContact && contactAgent != null && 
             (config.getCurrentTime() - contactStartTime < config.getContactDuration());
     }
 
-    public void handleInfection() {
+    public void handleInfectionFreeze() {
         // If agent is in infection period, velocity should be zero
         if (isInInfectionPeriod()) {
             this.velocity = new Vector2D(0, 0);
