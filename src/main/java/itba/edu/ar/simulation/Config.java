@@ -19,6 +19,7 @@ public class Config {
     private int realizations;
     private String outputDirectory;
     private boolean saveSnapshots;
+    private double minTimeToCalculateVelocity;
 
     // Zombies/Humans Parameters
     private int initialHumans;
@@ -60,7 +61,14 @@ public class Config {
         this.relaxationTime = config.relaxationTime;
     }
 
-    
+    public double getMinTimeToCalculateVelocity() {
+        return minTimeToCalculateVelocity;
+    }
+
+    public void setMinTimeToCalculateVelocity(double minTimeToCalculateVelocity) {
+        this.minTimeToCalculateVelocity = minTimeToCalculateVelocity;
+    }
+
     public double getArenaRadius() {
         return arenaRadius;
     }

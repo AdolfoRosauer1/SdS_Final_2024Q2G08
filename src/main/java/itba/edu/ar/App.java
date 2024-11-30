@@ -38,13 +38,24 @@ public class App {
             }
 
             // Mostrar progreso
-            System.out.printf("Realización %d de %d completada.\n", realization, realizations);
+            int progressBarWidth = 50;
+            int progress = (int) ((double) realization / realizations * progressBarWidth);
+            System.out.print("\r[");
+            for (int i = 0; i < progressBarWidth; i++) {
+                if (i < progress) {
+                    System.out.print("=");
+                } else {
+                    System.out.print(" ");
+                }
+            }
+            System.out.printf("] %d%%", (int)((double)realization/realizations * 100));
         }
-
-        try {
-            OutputHandler.saveFinishStates(finishStates, config.getOutputDirectory(), config.getProbabilityInfection());
-        } catch (IOException e) {
-            System.err.println("Error al guardar los estados finales: " + e.getMessage());
+        if (!config.isSaveSnapshots()) {
+            try {
+                OutputHandler.saveFinishStates(finishStates, config);
+            } catch (IOException e) {
+                System.err.println("Error al guardar los estados finales: " + e.getMessage());
+            }
         }
 
         System.out.println("Todas las realizaciones han finalizado.");

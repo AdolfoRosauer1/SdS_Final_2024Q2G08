@@ -1,9 +1,6 @@
 package itba.edu.ar;
 
-import itba.edu.ar.simulation.Agent;
-import itba.edu.ar.simulation.FinishState;
-import itba.edu.ar.simulation.Simulation;
-import itba.edu.ar.simulation.SimulationSnapshot;
+import itba.edu.ar.simulation.*;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -18,15 +15,19 @@ public class OutputHandler {
         }
     }
 
-    public static void saveFinishStates(List<FinishState> finishStates, String outputDirectory, double probabilityInfection) throws IOException {
-        String filename = outputDirectory + "/finish_states_" + probabilityInfection + ".csv";
+    public static void saveFinishStates(List<FinishState> finishStates, Config config) throws IOException {
+        String filename = config.getOutputDirectory() + "/finish_states_" + config.getProbabilityInfection() + ".csv";
         FileWriter csvWriter = new FileWriter(filename);
 
-        csvWriter.append("Id,Time,NumZombies,NumHumans\n");
+        csvWriter.append("Id,Time,NumZombies,NumHumans,averageVelocity\n");
         int id = 1;
         for (FinishState finishState : finishStates) {
-            csvWriter.append(id++ + "," + finishState.time + "," + finishState.num_zombies + ","
-                    + finishState.num_humans + "\n");
+            if (finishState.time() < config.getMinTimeToCalculateVelocity()){
+                continue;
+            }
+            String toWrite = id++ + "," + finishState.time() + "," + finishState.num_zombies() + ","
+                    + finishState.num_humans() + "," + finishState.averageVelocity() + "\n";
+            csvWriter.append(toWrite);
         }
 
         csvWriter.flush();

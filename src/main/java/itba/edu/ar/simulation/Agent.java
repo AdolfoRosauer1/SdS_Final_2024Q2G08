@@ -48,7 +48,7 @@ public class Agent {
         this.config = config;
 
         // Inicializar posición aleatoria dentro del área permitida
-        this.position = PositionInitializer.initializePosition(config.getArenaRadius());
+        this.position = PositionInitializer.initializePosition(config.getArenaRadius(), agents);
         this.velocity = new Vector2D(0, 0);
         this.desiredDirection = new Vector2D(0, 0);
         this.contacts = new ArrayList<>();

@@ -10,9 +10,10 @@
     "arenaRadius": 11.0,
     "simulationTime": 2000.0,
     "timeStep": 0.05,
-    "realizations": 150,
+    "realizations": 200,
     "outputDirectory": "simulation_results",
     "saveSnapshots": false,
+    "minTimeToCalculateVelocity": 250,
 
     "initialHumans": 50,
     "initialZombies": 1,

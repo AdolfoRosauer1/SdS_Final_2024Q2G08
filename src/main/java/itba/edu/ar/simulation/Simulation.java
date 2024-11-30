@@ -52,7 +52,17 @@ public class Simulation {
                 break;
             }
         }
-        return new FinishState(currentTime, getAmountZombies(), getAmountHumans());
+        return new FinishState(currentTime, getAmountZombies(), getAmountHumans(), averageVelocity());
+    }
+
+    public double averageVelocity(){
+        // Promedio de los vectores de velocidad de todos los agentes
+        Vector2D totalVelocity = new Vector2D(0, 0);
+        for (Agent agent : agents) {
+            totalVelocity = totalVelocity.add(agent.getVelocity());
+        }
+//        <-- + --> = 0.0/2
+        return totalVelocity.divide(agents.size()).magnitude();
     }
 
     public int getAmountZombies(){
