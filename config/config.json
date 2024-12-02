@@ -12,7 +12,7 @@
     "arenaRadius": 15.0,
     "simulationTime": 2000.0,
     "timeStep": 0.05,
-    "realizations": 5,
+    "realizations": 25,
     "outputDirectory": "simulation_results",
     "saveSnapshots": true,
     "minTimeToCalculateVelocity": 250,
@@ -22,7 +22,7 @@
     "humanSpeed": 4.0,
     "zombieSpeed": 4.0,
     "contactDuration": 3.0,
-    "probabilityInfection": 0.5,
+    "probabilityInfection": 0.8,
 
     "minRadius": 0.15,
     "maxRadius": 0.35,
