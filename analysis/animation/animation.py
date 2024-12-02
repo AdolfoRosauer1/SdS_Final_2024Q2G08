@@ -141,8 +141,8 @@ def create_animation(csv_path, output_directory, fps, start_time, total_seconds)
 
 
 output_path = create_animation(
-    csv_path='simulation_results/realization_0.5_2.csv',
+    csv_path='simulation_results/realization_0.5_6.csv',
     output_directory='analysis/animation/exports',
     fps=30,
-    start_time=250.0,
-    total_seconds=10.0)
+    start_time=0.0,
+    total_seconds=15.0)
