@@ -41,7 +41,7 @@ def create_animation(csv_path, output_directory, fps, start_time, total_seconds)
     fig, ax = plt.subplots(figsize=(10, 10))
     
     # Set the arena boundaries (radius 11 as specified)
-    ARENA_RADIUS = 11
+    ARENA_RADIUS = 15
     ax.set_xlim(-ARENA_RADIUS, ARENA_RADIUS)
     ax.set_ylim(-ARENA_RADIUS, ARENA_RADIUS)
     
