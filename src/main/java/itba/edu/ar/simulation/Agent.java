@@ -2,6 +2,7 @@ package itba.edu.ar.simulation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Agent {
     // Simulation parameters
@@ -28,7 +29,7 @@ public class Agent {
     private final double minRadius;
     private final double maxRadius;
     private final double relaxationTime;
-    private final double CPM_BETA = 1.0;
+    private final double CPM_BETA;
 
     // List of contacts with other agents
     private final List<Agent> contacts;
@@ -44,6 +45,7 @@ public class Agent {
         this.radius = config.getMaxRadius();
         this.maxRadius = config.getMaxRadius();
         this.relaxationTime = config.getRelaxationTime();
+        this.CPM_BETA = config.getCpmBeta();
         this.agents = agents;
         this.config = config;
 
@@ -71,6 +73,7 @@ public class Agent {
         this.contacts = new ArrayList<>(agent.contacts);
         this.agents = agent.agents;
         this.config = agent.config;
+        this.CPM_BETA = agent.getCPM_BETA();
     }
 
     public void setCPMVelocity() {
@@ -275,10 +278,9 @@ public class Agent {
 
     public void updateDesiredDirection() {
         if (this.type == AgentType.HUMAN) {
-            // Social Force Model for humans
-            Vector2D socialForce = new Vector2D(0, 0);
-            Vector2D escapeForce = new Vector2D(0, 0);
-            
+
+            Vector2D totalDirection = new Vector2D(0, 0);
+
             for (Agent other : agents) {
                 if (other == this) continue;
                 
@@ -287,33 +289,22 @@ public class Agent {
                 if (distance < 1e-10) continue;
                 
                 Vector2D direction = diff.normalize();
-                
-                // Social force from other agents
-                double socialForceMagnitude = Math.exp(-distance / config.getSocialForceRadius());
-                Vector2D currentSocialForce = direction.multiply(socialForceMagnitude);
-                
-                // Additional escape force from zombies
-                if (other.getType() == AgentType.ZOMBIE) {
-                    double escapeForceMagnitude = 2.0 * Math.exp(-distance / config.getZombieDetectionRadius());
-                    Vector2D currentEscapeForce = direction.multiply(escapeForceMagnitude);
-                    escapeForce = escapeForce.add(currentEscapeForce);
+
+                if(other.getType() == AgentType.ZOMBIE){
+                    totalDirection = totalDirection.add(direction.multiply( config.getAz() * Math.exp(-distance / config.getBz())));
+                } else { //Is human
+                    totalDirection = totalDirection.add(direction.multiply( config.getAh() * Math.exp(-distance / config.getBh())));
                 }
-                
-                socialForce = socialForce.add(currentSocialForce);
             }
             
             // Boundary repulsion
-            Vector2D boundaryForce = calculateBoundaryForce();
-            
-            // Combine all forces
-            Vector2D totalForce = socialForce.multiply(config.getSocialForceWeight())
-                    .add(escapeForce.multiply(config.getEscapeForceWeight()))
-                    .add(boundaryForce.multiply(config.getBoundaryForceWeight()));
-            
-            if (totalForce.magnitude() > 1e-10) {
-                this.desiredDirection = totalForce.normalize();
-            }
-            
+            Vector2D boundaryDirection = calculateBoundaryDirection();
+            totalDirection = totalDirection.add(boundaryDirection.normalize().multiply( config.getAw() *
+                    Math.exp(-boundaryDirection.magnitude() / config.getBz())));
+
+            //Need to study if we add noise or not
+            this.desiredDirection = totalDirection.normalize();
+
         } else {
             // Zombie behavior - pursue nearest human
             Agent nearestHuman = null;
@@ -338,7 +329,8 @@ public class Agent {
         }
     }
 
-    private Vector2D calculateBoundaryForce() {
+
+    private Vector2D calculateBoundaryDirection() {
         double distanceToCenter = position.magnitude();
         double arenaRadius = config.getArenaRadius();
         
