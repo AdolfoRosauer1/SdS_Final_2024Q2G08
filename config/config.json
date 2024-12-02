@@ -1,13 +1,15 @@
 {
-    "cpmBeta": 1.0,
+    "cpmBeta": 0.9,
+    "az": 8,
+    "bz": 4,
+    "ah": 4,
+    "bh": 1,
+    "aw": 8,
+    "bw": 1,
 
-    "socialForceWeight": 200.0,
-    "escapeForceWeight": 200.0,
-    "boundaryForceWeight": 200.0,
-    "socialForceRadius": 2.0,
-    "zombieDetectionRadius": 5.0,
+    "noiseDir": 3,
 
-    "arenaRadius": 11.0,
+    "arenaRadius": 15.0,
     "simulationTime": 2000.0,
     "timeStep": 0.05,
     "realizations": 5,
@@ -15,8 +17,8 @@
     "saveSnapshots": true,
     "minTimeToCalculateVelocity": 250,
 
-    "initialHumans": 25,
-    "initialZombies": 25,
+    "initialHumans": 50,
+    "initialZombies": 1,
     "humanSpeed": 4.0,
     "zombieSpeed": 4.0,
     "contactDuration": 3.0,
