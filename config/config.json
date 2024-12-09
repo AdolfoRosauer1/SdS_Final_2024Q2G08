@@ -6,26 +6,21 @@
     "bh": 1,
     "aw": 8,
     "bw": 1,
-
     "noiseDir": 3,
-
     "arenaRadius": 15.0,
     "simulationTime": 2000.0,
     "timeStep": 0.05,
-    "realizations": 25,
+    "realizations": 1,
     "outputDirectory": "simulation_results",
     "saveSnapshots": true,
     "minTimeToCalculateVelocity": 250,
-
     "initialHumans": 50,
     "initialZombies": 1,
     "humanSpeed": 4.0,
     "zombieSpeed": 4.0,
     "contactDuration": 3.0,
-    "probabilityInfection": 0.8,
-
+    "probabilityInfection": 0.85,
     "minRadius": 0.15,
     "maxRadius": 0.35,
     "relaxationTime": 1.0
 }
-  

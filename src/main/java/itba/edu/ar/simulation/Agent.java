@@ -147,7 +147,8 @@ public class Agent {
                 }
                 
                 // Handle infection logic
-                if (this.type != other.type) {
+                // Only infect if the other agent is not already in contact
+                if (this.type != other.type && !other.isInContact() && !this.isInContact) {
                     if (!this.isInContact || this.contactAgent != other) {
                         // New contact with different type - set contact state for both agents
                         this.isInContact = true;
@@ -157,38 +158,6 @@ public class Agent {
                         other.setInContact(true);
                         other.setContactStartTime(config.getCurrentTime());
                         other.setContactAgent(this);
-                    } else if (config.getCurrentTime() - this.contactStartTime >= config.getContactDuration()) {
-                        // Contact duration exceeded, attempt infection
-                        double infectionRoll = Math.random();
-                        System.out.println("Infection roll: " + infectionRoll);
-                        if (infectionRoll < config.getProbabilityInfection()) {
-                            // HUMAN to ZOMBIE
-                            if (this.type == AgentType.HUMAN) {
-                                System.out.println("Infecting human");
-                                this.type = AgentType.ZOMBIE;
-                                this.speed = config.getZombieSpeed();
-                            } else if (other.getType() == AgentType.HUMAN) {
-                                System.out.println("Infecting human");
-                                other.setType(AgentType.ZOMBIE);
-                                other.setSpeed(config.getZombieSpeed());
-                            }
-                        }else{
-                            // ZOMBIE to HUMAN
-                            if (this.type == AgentType.ZOMBIE) {
-                                System.out.println("Infecting zombie");
-                                this.type = AgentType.HUMAN;
-                                this.speed = config.getHumanSpeed();
-                            }else{
-                                System.out.println("Infecting zombie");
-                                other.setType(AgentType.HUMAN);
-                                other.setSpeed(config.getHumanSpeed());
-                            }
-                        }
-                        // Reset contact state for both agents
-                        this.isInContact = false;
-                        this.contactAgent = null;
-                        other.setInContact(false);
-                        other.setContactAgent(null);
                     }
                 }
                 
@@ -297,11 +266,18 @@ public class Agent {
             }
             
             // Boundary repulsion
-            Vector2D boundaryDirection = calculateBoundaryDirection();
+            Vector2D boundaryDirection = calculateDistanceToWall();
             totalDirection = totalDirection.add(boundaryDirection.normalize().multiply( config.getAw() *
-                    Math.exp(-boundaryDirection.magnitude() / config.getBz())));
+                    Math.exp(-boundaryDirection.magnitude() / config.getBw())));
+
+//            
 
             //Need to study if we add noise or not
+            //Noise
+            // Maximum noise is 1.5 degrees to each side
+            double noise = 3 * Math.PI / 180;
+            double angularNoise = (Math.random() - 0.5) * noise;
+            totalDirection = totalDirection.rotate(angularNoise);
             this.desiredDirection = totalDirection.normalize();
 
         } else {
@@ -309,8 +285,9 @@ public class Agent {
             Agent nearestHuman = null;
             double minDistance = Double.MAX_VALUE;
             
+            // Only pursue humans that are not in contact
             for (Agent other : agents) {
-                if (other.getType() == AgentType.HUMAN) {
+                if (other.getType() == AgentType.HUMAN && !other.isInContact()) {
                     double distance = this.position.subtract(other.position).magnitude();
                     if (distance < minDistance) {
                         minDistance = distance;
@@ -324,18 +301,47 @@ public class Agent {
                 if (pursuitDirection.magnitude() > 1e-10) {
                     this.desiredDirection = pursuitDirection.normalize();
                 }
+            }else{
+                // No humans to pursue, dont move
+                this.desiredDirection = new Vector2D(0,0);
             }
         }
     }
 
 
-    private Vector2D calculateBoundaryDirection() {
+    private Vector2D calculateDistanceToWall() {
         double distanceToCenter = position.magnitude();
         double arenaRadius = config.getArenaRadius();
         
-        if (distanceToCenter > arenaRadius * 0.8) {
+        // If agent is at center, return zero vector
+        if (distanceToCenter < 1e-10) {
+            return new Vector2D(0, 0);
+        }
+        
+        // Calculate vector from center to agent position (normalized)
+        Vector2D centerToAgent = position.normalize();
+        
+        // Calculate closest point on wall
+        Vector2D closestPointOnWall = centerToAgent.multiply(arenaRadius);
+        
+        // Vector from agent to closest point on wall
+        Vector2D distanceToWall = closestPointOnWall.subtract(position);
+        
+        return distanceToWall.multiply(-1.0);
+    }
+
+    private Vector2D calculateDirectionToCenter() {
+        Vector2D toCenter = position.multiply(-1.0);
+        return toCenter.normalize();
+    }
+    
+    private Vector2D calculateBoundaryDirection() {
+        double distanceToCenter = position.magnitude();
+        double arenaRadius = config.getArenaRadius();
+        double safeDistance = arenaRadius - this.radius;
+        if (distanceToCenter > safeDistance) {
             Vector2D toCenter = position.multiply(-1.0);
-            double forceMagnitude = Math.exp((distanceToCenter - arenaRadius) / (0.2 * arenaRadius));
+            double forceMagnitude = Math.exp((distanceToCenter - arenaRadius) / this.radius);
             return toCenter.normalize().multiply(forceMagnitude);
         }
         return new Vector2D(0, 0);
