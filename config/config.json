@@ -12,7 +12,7 @@
     "arenaRadius": 15.0,
     "simulationTime": 2000.0,
     "timeStep": 0.05,
-    "realizations": 100,
+    "realizations": 400,
     "outputDirectory": "simulation_results/final_analysis",
     "saveVelocitiesAndPercentages": true,
     "savePositions": false,
