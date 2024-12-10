@@ -22,7 +22,7 @@ public class OutputHandler {
         csvWriter.append("Id,Time,NumZombies,NumHumans,averageVelocity\n");
         int id = 1;
         for (FinishState finishState : finishStates) {
-            if (finishState.time() < config.getMinTimeToCalculateVelocity()){
+            if (finishState.time() < config.getMinTimeToCalculateVelocity()) {
                 continue;
             }
             String toWrite = id++ + "," + finishState.time() + "," + finishState.num_zombies() + ","
@@ -34,40 +34,61 @@ public class OutputHandler {
         csvWriter.close();
     }
 
-    public static void saveResults(Simulation simulation, String outputDirectory) throws IOException {
+    public static void saveVelocitiesAndPercentages(String outputDirectory, Simulation simulation) throws IOException {
         List<SimulationSnapshot> snapshots = simulation.getSnapshots();
-        int realizationNumber = simulation.getRealizationNumber();
-
-        // Guardar datos en archivos CSV
-        String filename = outputDirectory + "/realization_" +simulation.getConfig().getProbabilityInfection()+"_"+ realizationNumber + ".csv";
-        FileWriter csvWriter = new FileWriter(filename);
-
-        String velFilename = outputDirectory + "/realization_" +simulation.getConfig().getProbabilityInfection()+"_"+ realizationNumber + "_vel.csv";
+        String velFilename = outputDirectory + "/realization_" + simulation.getConfig().getProbabilityInfection() + "_"
+                + simulation.getRealizationNumber() + "_vel.csv";
         FileWriter velCsvWriter = new FileWriter(velFilename);
 
-        // Escribir encabezados
-        csvWriter.append("Time,AgentID,AgentType,PosX,PosY,Radius\n");
+        // Write header
         velCsvWriter.append("Time,zombiePercentage,averageVelocity\n");
 
-        // Escribir datos de cada snapshot
+        // Write data from each snapshot
+        for (SimulationSnapshot snapshot : snapshots) {
+            velCsvWriter.append(snapshot.getTime() + ",");
+            velCsvWriter.append(snapshot.zombiePercentage() + ",");
+            velCsvWriter.append(snapshot.averageVelocity() + "\n");
+        }
+
+        velCsvWriter.flush();
+        velCsvWriter.close();
+    }
+
+    public static void savePositions(String outputDirectory, Simulation simulation) throws IOException {
+        List<SimulationSnapshot> snapshots = simulation.getSnapshots();
+        String posFilename = outputDirectory + "/realization_" + simulation.getConfig().getProbabilityInfection() + "_"
+                + simulation.getRealizationNumber() + ".csv";
+        FileWriter posCsvWriter = new FileWriter(posFilename);
+
+        // Write header
+        posCsvWriter.append("Time,AgentID,AgentType,PosX,PosY,Radius\n");
+
+        // Write data from each snapshot
         for (SimulationSnapshot snapshot : snapshots) {
             double time = snapshot.getTime();
             for (Agent agent : snapshot.getAgents()) {
-                csvWriter.append(time + ",");
-                csvWriter.append(agent.getId() + ",");
-                csvWriter.append(agent.getType().toString() + ",");
-                csvWriter.append(agent.getPosition().getX() + ",");
-                csvWriter.append(agent.getPosition().getY() + ",");
-                csvWriter.append(agent.getRadius() + "\n");
+                posCsvWriter.append(time + ",");
+                posCsvWriter.append(agent.getId() + ",");
+                posCsvWriter.append(agent.getType().toString() + ",");
+                posCsvWriter.append(agent.getPosition().getX() + ",");
+                posCsvWriter.append(agent.getPosition().getY() + ",");
+                posCsvWriter.append(agent.getRadius() + "\n");
             }
-            velCsvWriter.append(time + ",");
-            velCsvWriter.append(snapshot.zombiePercentage()+ ",");
-            velCsvWriter.append(snapshot.averageVelocity() + "\n");
-
         }
-        velCsvWriter.flush();
-        velCsvWriter.close();
-        csvWriter.flush();
-        csvWriter.close();
+
+        posCsvWriter.flush();
+        posCsvWriter.close();
+    }
+
+    public static void saveResults(Simulation simulation, String outputDirectory) throws IOException {
+        // Save velocities and percentages
+        if (simulation.getConfig().isSaveVelocitiesAndPercentages()) {
+            saveVelocitiesAndPercentages(outputDirectory, simulation);
+        }
+
+        // Save positions
+        if (simulation.getConfig().isSavePositions()) {
+            savePositions(outputDirectory, simulation);
+        }
     }
 }

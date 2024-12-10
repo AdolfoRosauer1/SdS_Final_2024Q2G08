@@ -10,7 +10,6 @@ public class Simulation {
     private double currentTime;
     private List<SimulationSnapshot> snapshots;
 
-
     public Simulation(Config config, int realizationNumber) {
         this.config = config;
         this.realizationNumber = realizationNumber;
@@ -30,7 +29,7 @@ public class Simulation {
 
         // Inicializar humanos
         for (int j = 0; j < config.getInitialHumans(); j++) {
-            Agent human = new Agent(i+j, AgentType.HUMAN, agents, config);
+            Agent human = new Agent(i + j, AgentType.HUMAN, agents, config);
             agents.add(human);
         }
     }
@@ -40,10 +39,12 @@ public class Simulation {
             // Actualizar estado de los agentes
             updateAgents();
 
-            if (config.isSaveSnapshots()) {
-                // Guardar snapshot para análisis
-                saveSnapshot();
-            }
+            // if (config.isSaveSnapshots()) {
+            // // Guardar snapshot para análisis
+            // saveSnapshot();
+            // }
+
+            saveSnapshot();
 
             // Incrementar tiempo
             currentTime += config.getTimeStep();
@@ -55,17 +56,17 @@ public class Simulation {
         return new FinishState(currentTime, getAmountZombies(), getAmountHumans(), averageVelocity());
     }
 
-    public double averageVelocity(){
+    public double averageVelocity() {
         // Promedio de los vectores de velocidad de todos los agentes
         Vector2D totalVelocity = new Vector2D(0, 0);
         for (Agent agent : agents) {
             totalVelocity = totalVelocity.add(agent.getVelocity());
         }
-//        <-- + --> = 0.0/2
+        // <-- + --> = 0.0/2
         return totalVelocity.divide(agents.size()).magnitude();
     }
 
-    public int getAmountZombies(){
+    public int getAmountZombies() {
         int count = 0;
         for (Agent agent : agents) {
             if (agent.getType() == AgentType.ZOMBIE) {
@@ -75,7 +76,7 @@ public class Simulation {
         return count;
     }
 
-    public int getAmountHumans(){
+    public int getAmountHumans() {
         int count = 0;
         for (Agent agent : agents) {
             if (agent.getType() == AgentType.HUMAN) {

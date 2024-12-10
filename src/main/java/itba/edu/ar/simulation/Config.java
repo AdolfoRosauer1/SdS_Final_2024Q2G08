@@ -19,7 +19,6 @@ public class Config {
     // Noise Direction
     private double noiseDir;
 
-
     // Simulation Parameters
     private double arenaRadius;
     private double simulationTime;
@@ -28,7 +27,9 @@ public class Config {
     private double timeStep;
     private int realizations;
     private String outputDirectory;
-    private boolean saveSnapshots;
+    private boolean saveVelocitiesAndPercentages;
+    private boolean savePositions;
+    private boolean saveFinishStates;
     private double minTimeToCalculateVelocity;
 
     // Zombies/Humans Parameters
@@ -47,7 +48,13 @@ public class Config {
     public Config() {
     }
 
-    public Config(double cpmBeta, double az, double bz, double ah, double bh, double aw, double bw, double nH, double nZ, double noiseDir, double arenaRadius, double simulationTime, double currentTime, List<Double> probabilities, double timeStep, int realizations, String outputDirectory, boolean saveSnapshots, double minTimeToCalculateVelocity, int initialHumans, int initialZombies, double humanSpeed, double zombieSpeed, double contactDuration, double probabilityInfection, double minRadius, double maxRadius, double relaxationTime) {
+    public Config(double cpmBeta, double az, double bz, double ah, double bh, double aw, double bw, double nH,
+            double nZ, double noiseDir, double arenaRadius, double simulationTime, double currentTime,
+            List<Double> probabilities, double timeStep, int realizations, String outputDirectory,
+            boolean saveVelocitiesAndPercentages, boolean savePositions, boolean saveFinishStates,
+            double minTimeToCalculateVelocity, int initialHumans, int initialZombies, double humanSpeed,
+            double zombieSpeed, double contactDuration, double probabilityInfection, double minRadius, double maxRadius,
+            double relaxationTime) {
         this.cpmBeta = cpmBeta;
         this.az = az;
         this.bz = bz;
@@ -65,7 +72,9 @@ public class Config {
         this.timeStep = timeStep;
         this.realizations = realizations;
         this.outputDirectory = outputDirectory;
-        this.saveSnapshots = saveSnapshots;
+        this.saveVelocitiesAndPercentages = saveVelocitiesAndPercentages;
+        this.savePositions = savePositions;
+        this.saveFinishStates = saveFinishStates;
         this.minTimeToCalculateVelocity = minTimeToCalculateVelocity;
         this.initialHumans = initialHumans;
         this.initialZombies = initialZombies;
@@ -96,7 +105,9 @@ public class Config {
         this.timeStep = config.timeStep;
         this.realizations = config.realizations;
         this.outputDirectory = config.outputDirectory;
-        this.saveSnapshots = config.saveSnapshots;
+        this.saveVelocitiesAndPercentages = config.saveVelocitiesAndPercentages;
+        this.savePositions = config.savePositions;
+        this.saveFinishStates = config.saveFinishStates;
         this.minTimeToCalculateVelocity = config.minTimeToCalculateVelocity;
         this.initialHumans = config.initialHumans;
         this.initialZombies = config.initialZombies;
@@ -108,7 +119,6 @@ public class Config {
         this.maxRadius = config.maxRadius;
         this.relaxationTime = config.relaxationTime;
     }
-
 
     public double getCpmBeta() {
         return cpmBeta;
@@ -222,14 +232,6 @@ public class Config {
         this.outputDirectory = outputDirectory;
     }
 
-    public boolean isSaveSnapshots() {
-        return saveSnapshots;
-    }
-
-    public void setSaveSnapshots(boolean saveSnapshots) {
-        this.saveSnapshots = saveSnapshots;
-    }
-
     public double getMinTimeToCalculateVelocity() {
         return minTimeToCalculateVelocity;
     }
@@ -332,5 +334,29 @@ public class Config {
 
     public void setProbabilities(List<Double> probabilities) {
         this.probabilities = probabilities;
+    }
+
+    public boolean isSaveVelocitiesAndPercentages() {
+        return saveVelocitiesAndPercentages;
+    }
+
+    public void setSaveVelocitiesAndPercentages(boolean saveVelocitiesAndPercentages) {
+        this.saveVelocitiesAndPercentages = saveVelocitiesAndPercentages;
+    }
+
+    public boolean isSavePositions() {
+        return savePositions;
+    }
+
+    public void setSavePositions(boolean savePositions) {
+        this.savePositions = savePositions;
+    }
+
+    public boolean isSaveFinishStates() {
+        return saveFinishStates;
+    }
+
+    public void setSaveFinishStates(boolean saveFinishStates) {
+        this.saveFinishStates = saveFinishStates;
     }
 }

@@ -51,7 +51,7 @@ public class Agent {
         this.config = config;
 
         // Inicializar posición aleatoria dentro del área permitida
-        this.position = PositionInitializer.initializePosition(config.getArenaRadius(), agents);
+        this.position = PositionInitializer.initializePosition(config, agents, this);
         this.velocity = new Vector2D(0, 0);
         this.desiredDirection = new Vector2D(0, 0);
         this.contacts = new ArrayList<>();
@@ -79,8 +79,8 @@ public class Agent {
 
     public void setCPMVelocity() {
         // If agent is in infection period, velocity should be zero
-        if (isInContact && contactAgent != null && 
-            (config.getCurrentTime() - contactStartTime < config.getContactDuration())) {
+        if (isInContact && contactAgent != null &&
+                (config.getCurrentTime() - contactStartTime < config.getContactDuration())) {
             this.velocity = new Vector2D(0, 0);
             return;
         }
@@ -111,7 +111,8 @@ public class Agent {
             for (Agent other : contacts) {
                 Vector2D diff = this.position.subtract(other.position);
                 double distance = diff.magnitude();
-                if (distance < 1e-10) distance = 1e-10;
+                if (distance < 1e-10)
+                    distance = 1e-10;
                 escapeDirection = escapeDirection.add(diff.divide(distance)); // Normalized direction
             }
 
@@ -128,26 +129,28 @@ public class Agent {
 
     public void calculateRadius(double dt) {
         contacts.clear();
-        
+
         for (Agent other : agents) {
-            if (other == this) continue;
-            
+            if (other == this)
+                continue;
+
             Vector2D diff = other.position.subtract(this.position);
             double distance = diff.magnitude();
-            if (distance < 1e-10) distance = 1e-10;
+            if (distance < 1e-10)
+                distance = 1e-10;
 
             double combinedRadii = this.radius + other.radius;
             double collisionDistance = combinedRadii * 1.0;
 
             if (distance < collisionDistance) {
                 contacts.add(other);
-                
+
                 this.contract();
-                
+
                 if (!other.getContacts().contains(this)) {
                     other.addContact(this);
                 }
-                
+
                 // Handle infection logic
                 // Only infect if the other agent is not already in contact
                 if (this.type != other.type && !other.isInContact() && !this.isInContact) {
@@ -156,13 +159,13 @@ public class Agent {
                         this.isInContact = true;
                         this.contactStartTime = config.getCurrentTime();
                         this.contactAgent = other;
-                        
+
                         other.setInContact(true);
                         other.setContactStartTime(config.getCurrentTime());
                         other.setContactAgent(this);
                     }
                 }
-                
+
                 other.contract();
                 this.contract();
             }
@@ -203,6 +206,7 @@ public class Agent {
         calculateRadius(dt);
         updateDesiredDirection();
     }
+
     private void handleInfection() {
         if (!isInInfectionPeriod() && isInContact) {
             // Validate contactAgent is not null before using it
@@ -233,10 +237,9 @@ public class Agent {
         }
     }
 
-
     public boolean isInInfectionPeriod() {
-        return isInContact && contactAgent != null && 
-            (config.getCurrentTime() - contactStartTime < config.getContactDuration());
+        return isInContact && contactAgent != null &&
+                (config.getCurrentTime() - contactStartTime < config.getContactDuration());
     }
 
     public void handleInfectionFreeze() {
@@ -250,59 +253,63 @@ public class Agent {
         if (this.type == AgentType.HUMAN) {
 
             Vector2D totalDirection = new Vector2D(0, 0);
-            
+
             // Create lists of humans and zombies with distances
             List<Map.Entry<Agent, Double>> humans = new ArrayList<>();
             List<Map.Entry<Agent, Double>> zombies = new ArrayList<>();
-            
+
             for (Agent other : agents) {
                 if (other == this
-                //  || other.isInContact()
-                 ) continue;
-                
+                // || other.isInContact()
+                )
+                    continue;
+
                 Vector2D diff = this.position.subtract(other.position);
                 double distance = diff.magnitude();
-                if (distance < 1e-10) continue;
-                
+                if (distance < 1e-10)
+                    continue;
+
                 if (other.getType() == AgentType.ZOMBIE) {
                     zombies.add(new AbstractMap.SimpleEntry<>(other, distance));
                 } else {
                     humans.add(new AbstractMap.SimpleEntry<>(other, distance));
                 }
             }
-            
+
             // Sort by distance and take nearest nH humans and nZ zombies
             humans.sort(Map.Entry.comparingByValue());
             zombies.sort(Map.Entry.comparingByValue());
-            
-            int nH = (int)config.getnH();
-            int nZ = (int)config.getnZ();
-            
+
+            int nH = (int) config.getnH();
+            int nZ = (int) config.getnZ();
+
             humans = humans.subList(0, Math.min(nH, humans.size()));
             zombies = zombies.subList(0, Math.min(nZ, zombies.size()));
-            
+
             // Calculate total direction based on nearest agents
             for (Map.Entry<Agent, Double> entry : humans) {
                 Agent other = entry.getKey();
                 double distance = entry.getValue();
                 Vector2D direction = this.position.subtract(other.position).normalize();
-                totalDirection = totalDirection.add(direction.multiply(config.getAh() * Math.exp(-distance / config.getBh())));
+                totalDirection = totalDirection
+                        .add(direction.multiply(config.getAh() * Math.exp(-distance / config.getBh())));
             }
-            
+
             for (Map.Entry<Agent, Double> entry : zombies) {
                 Agent other = entry.getKey();
                 double distance = entry.getValue();
                 Vector2D direction = this.position.subtract(other.position).normalize();
-                totalDirection = totalDirection.add(direction.multiply(config.getAz() * Math.exp(-distance / config.getBz())));
+                totalDirection = totalDirection
+                        .add(direction.multiply(config.getAz() * Math.exp(-distance / config.getBz())));
             }
-            
+
             // Boundary repulsion
             Vector2D boundaryDirection = calculateDistanceToWall();
-            totalDirection = totalDirection.add(boundaryDirection.normalize().multiply( config.getAw() *
+            totalDirection = totalDirection.add(boundaryDirection.normalize().multiply(config.getAw() *
                     Math.exp(-boundaryDirection.magnitude() / config.getBw())));
 
-            //Need to study if we add noise or not
-            //Noise
+            // Need to study if we add noise or not
+            // Noise
             // Maximum noise is 1.5 degrees to each side
             double noise = 3 * Math.PI / 180;
             double angularNoise = (Math.random() - 0.5) * noise;
@@ -313,7 +320,7 @@ public class Agent {
             // Zombie behavior - pursue nearest human
             Agent nearestHuman = null;
             double minDistance = Double.MAX_VALUE;
-            
+
             // Only pursue humans that are not in contact
             for (Agent other : agents) {
                 if (other.getType() == AgentType.HUMAN && !other.isInContact()) {
@@ -324,38 +331,37 @@ public class Agent {
                     }
                 }
             }
-            
+
             if (nearestHuman != null) {
                 Vector2D pursuitDirection = nearestHuman.getPosition().subtract(this.position);
                 if (pursuitDirection.magnitude() > 1e-10) {
                     this.desiredDirection = pursuitDirection.normalize();
                 }
-            }else{
+            } else {
                 // No humans to pursue, dont move
-                this.desiredDirection = new Vector2D(0,0);
+                this.desiredDirection = new Vector2D(0, 0);
             }
         }
     }
 
-
     private Vector2D calculateDistanceToWall() {
         double distanceToCenter = position.magnitude();
         double arenaRadius = config.getArenaRadius();
-        
+
         // If agent is at center, return zero vector
         if (distanceToCenter < 1e-10) {
             return new Vector2D(0, 0);
         }
-        
+
         // Calculate vector from center to agent position (normalized)
         Vector2D centerToAgent = position.normalize();
-        
+
         // Calculate closest point on wall
         Vector2D closestPointOnWall = centerToAgent.multiply(arenaRadius);
-        
+
         // Vector from agent to closest point on wall
         Vector2D distanceToWall = closestPointOnWall.subtract(position);
-        
+
         return distanceToWall.multiply(-1.0);
     }
 

@@ -6,7 +6,13 @@ import itba.edu.ar.simulation.FinishState;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class App {
     public static void main(String[] args) {
@@ -23,52 +29,121 @@ public class App {
         // Ejecutar múltiples realizaciones
         int realizations = config.getRealizations();
         List<Double> probabilities = config.getProbabilities();
-        List<FinishState> finishStates = new ArrayList<>();
+        List<FinishState> finishStates = Collections.synchronizedList(new ArrayList<>());
+
+        long startTime = System.currentTimeMillis();
+        int totalSimulations = probabilities.size() * realizations;
+        AtomicInteger completedSimulations = new AtomicInteger(0);
+
+        // Create thread pool
+        int processors = Runtime.getRuntime().availableProcessors();
+        ExecutorService executor = Executors.newFixedThreadPool(processors);
+        CountDownLatch latch = new CountDownLatch(totalSimulations);
 
         for (Double probability : probabilities) {
             config.setProbabilityInfection(probability);
+
+            // Submit all realizations for this probability
             for (int realization = 1; realization <= realizations; realization++) {
-                // Inicializar simulación
-                Config configCopy = new Config(config);
-                configCopy.setProbabilityInfection(probability);
-                Simulation simulation = new Simulation(configCopy, realization);
-
-                // Ejecutar simulación
-                FinishState finishState = simulation.run();
-                finishStates.add(finishState);
-
-                // Guardar resultados
-                if (config.isSaveSnapshots()) {
+                final int currentRealization = realization;
+                executor.submit(() -> {
                     try {
-                        OutputHandler.saveResults(simulation, config.getOutputDirectory());
-                    } catch (IOException e) {
-                        System.err.println("Error al guardar los resultados: " + e.getMessage());
-                    }
-                }
+                        // Inicializar simulación
+                        Config configCopy = new Config(config);
+                        configCopy.setProbabilityInfection(probability);
+                        Simulation simulation = new Simulation(configCopy, currentRealization);
 
-                // Mostrar progreso
-                int progressBarWidth = 50;
-                int progress = (int) ((double) realization / realizations * progressBarWidth);
-                System.out.print("\r[");
-                for (int i = 0; i < progressBarWidth; i++) {
-                    if (i < progress) {
-                        System.out.print("=");
-                    } else {
-                        System.out.print(" ");
+                        // Ejecutar simulación
+                        FinishState finishState = simulation.run();
+                        finishStates.add(finishState);
+
+                        // Guardar resultados
+                        if (config.isSavePositions()) {
+                            try {
+                                OutputHandler.savePositions(config.getOutputDirectory(), simulation);
+                            } catch (IOException e) {
+                                System.err.println(
+                                        "Error al guardar los resultados: " + e.getMessage());
+                            }
+                        }
+
+                        if (config.isSaveVelocitiesAndPercentages()) {
+                            try {
+                                OutputHandler.saveVelocitiesAndPercentages(config.getOutputDirectory(),
+                                        simulation);
+                            } catch (IOException e) {
+                                System.err.println(
+                                        "Error al guardar los resultados: " + e.getMessage());
+                            }
+                        }
+
+                        // Update progress
+                        int completed = completedSimulations.incrementAndGet();
+                        int progressBarWidth = 50;
+                        int progress = (int) ((double) completed / totalSimulations * progressBarWidth);
+
+                        // Calculate ETA
+                        long currentTime = System.currentTimeMillis();
+                        long elapsedTime = currentTime - startTime;
+                        long estimatedTotalTime = (long) ((double) elapsedTime / completed
+                                * totalSimulations);
+                        long remainingTime = estimatedTotalTime - elapsedTime;
+                        long remainingMinutes = remainingTime / (1000 * 60);
+                        long remainingSeconds = (remainingTime / 1000) % 60;
+
+                        // Print progress bar
+                        StringBuilder progressBar = new StringBuilder("\r[");
+                        for (int i = 0; i < progressBarWidth; i++) {
+                            if (i < progress) {
+                                progressBar.append("█");
+                            } else {
+                                progressBar.append(" ");
+                            }
+                        }
+                        progressBar.append(String.format("] %d%% (P=%.2f, R=%d/%d) ETA: %dm %ds",
+                                (int) ((double) completed / totalSimulations * 100),
+                                probability,
+                                currentRealization,
+                                realizations,
+                                remainingMinutes,
+                                remainingSeconds));
+
+                        synchronized (System.out) {
+                            System.out.print(progressBar);
+                        }
+
+                    } finally {
+                        latch.countDown();
                     }
-                }
-                System.out.printf("] %d%%", (int) ((double) realization / realizations * 100));
+                });
             }
-            if (!config.isSaveSnapshots()) {
+        }
+
+        // Wait for all realizations to complete
+        try {
+            latch.await();
+            if (config.isSaveFinishStates()) {
                 try {
                     OutputHandler.saveFinishStates(finishStates, config);
                 } catch (IOException e) {
                     System.err.println("Error al guardar los estados finales: " + e.getMessage());
                 }
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.err.println("Interrupted while waiting for simulations to complete");
         }
-        
 
-        System.out.println("Todas las realizaciones han finalizado.");
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(1, TimeUnit.HOURS)) {
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+        }
+
+        System.out.println("\nTodas las realizaciones han finalizado en "
+                + (System.currentTimeMillis() - startTime) / 1000 + " segundos.");
     }
 }
