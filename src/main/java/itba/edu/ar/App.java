@@ -16,47 +16,58 @@ public class App {
         // Crear directorio de salida si no existe
         OutputHandler.createOutputDirectory(config.getOutputDirectory());
 
+        // Notificar las configuraciones
+        System.out.println("Configuraciones: " + config.getProbabilities());
+        System.out.println("realizaciones: " + config.getRealizations());
+
         // Ejecutar múltiples realizaciones
         int realizations = config.getRealizations();
+        List<Double> probabilities = config.getProbabilities();
         List<FinishState> finishStates = new ArrayList<>();
-        for (int realization = 1; realization <= realizations; realization++) {
-            // Inicializar simulación
-            Config configCopy = new Config(config);
-            Simulation simulation = new Simulation(configCopy, realization);
 
-            // Ejecutar simulación
-            FinishState finishState = simulation.run();
-            finishStates.add(finishState);
+        for (Double probability : probabilities) {
+            config.setProbabilityInfection(probability);
+            for (int realization = 1; realization <= realizations; realization++) {
+                // Inicializar simulación
+                Config configCopy = new Config(config);
+                configCopy.setProbabilityInfection(probability);
+                Simulation simulation = new Simulation(configCopy, realization);
 
-            // Guardar resultados
-            if (config.isSaveSnapshots()) {
+                // Ejecutar simulación
+                FinishState finishState = simulation.run();
+                finishStates.add(finishState);
+
+                // Guardar resultados
+                if (config.isSaveSnapshots()) {
+                    try {
+                        OutputHandler.saveResults(simulation, config.getOutputDirectory());
+                    } catch (IOException e) {
+                        System.err.println("Error al guardar los resultados: " + e.getMessage());
+                    }
+                }
+
+                // Mostrar progreso
+                int progressBarWidth = 50;
+                int progress = (int) ((double) realization / realizations * progressBarWidth);
+                System.out.print("\r[");
+                for (int i = 0; i < progressBarWidth; i++) {
+                    if (i < progress) {
+                        System.out.print("=");
+                    } else {
+                        System.out.print(" ");
+                    }
+                }
+                System.out.printf("] %d%%", (int) ((double) realization / realizations * 100));
+            }
+            if (!config.isSaveSnapshots()) {
                 try {
-                    OutputHandler.saveResults(simulation, config.getOutputDirectory());
+                    OutputHandler.saveFinishStates(finishStates, config);
                 } catch (IOException e) {
-                    System.err.println("Error al guardar los resultados: " + e.getMessage());
+                    System.err.println("Error al guardar los estados finales: " + e.getMessage());
                 }
             }
-
-            // Mostrar progreso
-            int progressBarWidth = 50;
-            int progress = (int) ((double) realization / realizations * progressBarWidth);
-            System.out.print("\r[");
-            for (int i = 0; i < progressBarWidth; i++) {
-                if (i < progress) {
-                    System.out.print("=");
-                } else {
-                    System.out.print(" ");
-                }
-            }
-            System.out.printf("] %d%%", (int)((double)realization/realizations * 100));
         }
-        if (!config.isSaveSnapshots()) {
-            try {
-                OutputHandler.saveFinishStates(finishStates, config);
-            } catch (IOException e) {
-                System.err.println("Error al guardar los estados finales: " + e.getMessage());
-            }
-        }
+        
 
         System.out.println("Todas las realizaciones han finalizado.");
     }

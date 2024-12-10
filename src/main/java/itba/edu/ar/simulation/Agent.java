@@ -1,7 +1,9 @@
 package itba.edu.ar.simulation;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class Agent {
     // Simulation parameters
@@ -248,29 +250,56 @@ public class Agent {
         if (this.type == AgentType.HUMAN) {
 
             Vector2D totalDirection = new Vector2D(0, 0);
-
+            
+            // Create lists of humans and zombies with distances
+            List<Map.Entry<Agent, Double>> humans = new ArrayList<>();
+            List<Map.Entry<Agent, Double>> zombies = new ArrayList<>();
+            
             for (Agent other : agents) {
-                if (other == this) continue;
+                if (other == this
+                //  || other.isInContact()
+                 ) continue;
                 
                 Vector2D diff = this.position.subtract(other.position);
                 double distance = diff.magnitude();
                 if (distance < 1e-10) continue;
                 
-                Vector2D direction = diff.normalize();
-
-                if(other.getType() == AgentType.ZOMBIE){
-                    totalDirection = totalDirection.add(direction.multiply( config.getAz() * Math.exp(-distance / config.getBz())));
-                } else { //Is human
-                    totalDirection = totalDirection.add(direction.multiply( config.getAh() * Math.exp(-distance / config.getBh())));
+                if (other.getType() == AgentType.ZOMBIE) {
+                    zombies.add(new AbstractMap.SimpleEntry<>(other, distance));
+                } else {
+                    humans.add(new AbstractMap.SimpleEntry<>(other, distance));
                 }
+            }
+            
+            // Sort by distance and take nearest nH humans and nZ zombies
+            humans.sort(Map.Entry.comparingByValue());
+            zombies.sort(Map.Entry.comparingByValue());
+            
+            int nH = (int)config.getnH();
+            int nZ = (int)config.getnZ();
+            
+            humans = humans.subList(0, Math.min(nH, humans.size()));
+            zombies = zombies.subList(0, Math.min(nZ, zombies.size()));
+            
+            // Calculate total direction based on nearest agents
+            for (Map.Entry<Agent, Double> entry : humans) {
+                Agent other = entry.getKey();
+                double distance = entry.getValue();
+                Vector2D direction = this.position.subtract(other.position).normalize();
+                totalDirection = totalDirection.add(direction.multiply(config.getAh() * Math.exp(-distance / config.getBh())));
+            }
+            
+            for (Map.Entry<Agent, Double> entry : zombies) {
+                Agent other = entry.getKey();
+                double distance = entry.getValue();
+                Vector2D direction = this.position.subtract(other.position).normalize();
+                totalDirection = totalDirection.add(direction.multiply(config.getAz() * Math.exp(-distance / config.getBz())));
             }
             
             // Boundary repulsion
             Vector2D boundaryDirection = calculateDistanceToWall();
             totalDirection = totalDirection.add(boundaryDirection.normalize().multiply( config.getAw() *
                     Math.exp(-boundaryDirection.magnitude() / config.getBw())));
-
-//            
 
             //Need to study if we add noise or not
             //Noise
@@ -328,23 +357,6 @@ public class Agent {
         Vector2D distanceToWall = closestPointOnWall.subtract(position);
         
         return distanceToWall.multiply(-1.0);
-    }
-
-    private Vector2D calculateDirectionToCenter() {
-        Vector2D toCenter = position.multiply(-1.0);
-        return toCenter.normalize();
-    }
-    
-    private Vector2D calculateBoundaryDirection() {
-        double distanceToCenter = position.magnitude();
-        double arenaRadius = config.getArenaRadius();
-        double safeDistance = arenaRadius - this.radius;
-        if (distanceToCenter > safeDistance) {
-            Vector2D toCenter = position.multiply(-1.0);
-            double forceMagnitude = Math.exp((distanceToCenter - arenaRadius) / this.radius);
-            return toCenter.normalize().multiply(forceMagnitude);
-        }
-        return new Vector2D(0, 0);
     }
 
     public void contract() {

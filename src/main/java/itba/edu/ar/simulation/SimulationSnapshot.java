@@ -19,12 +19,12 @@ public class SimulationSnapshot {
 
     public double averageVelocity() {
         // Promedio de los vectores de velocidad de todos los agentes
-        Vector2D totalVelocity = new Vector2D(0, 0);
+        double totalVelocity = 0;
         for (Agent agent : agents) {
-            totalVelocity = totalVelocity.add(agent.getVelocity());
+            totalVelocity += agent.getVelocity().magnitude();
         }
 //        <-- + --> = 0.0/2
-        return totalVelocity.divide(agents.size()).magnitude();
+        return totalVelocity / agents.size();
     }
 
     public double zombiePercentage() {

@@ -1,5 +1,7 @@
 package itba.edu.ar.simulation;
 
+import java.util.List;
+
 public class Config {
     // CPM Parameters
     private double cpmBeta;
@@ -11,6 +13,8 @@ public class Config {
     private double bh;
     private double aw;
     private double bw;
+    private double nH;
+    private double nZ;
 
     // Noise Direction
     private double noiseDir;
@@ -20,6 +24,7 @@ public class Config {
     private double arenaRadius;
     private double simulationTime;
     private double currentTime = 0.0;
+    private List<Double> probabilities;
     private double timeStep;
     private int realizations;
     private String outputDirectory;
@@ -42,7 +47,7 @@ public class Config {
     public Config() {
     }
 
-    public Config(double cpmBeta, double az, double bz, double ah, double bh, double aw, double bw, double noiseDir, double arenaRadius, double simulationTime, double currentTime, double timeStep, int realizations, String outputDirectory, boolean saveSnapshots, double minTimeToCalculateVelocity, int initialHumans, int initialZombies, double humanSpeed, double zombieSpeed, double contactDuration, double probabilityInfection, double minRadius, double maxRadius, double relaxationTime) {
+    public Config(double cpmBeta, double az, double bz, double ah, double bh, double aw, double bw, double nH, double nZ, double noiseDir, double arenaRadius, double simulationTime, double currentTime, List<Double> probabilities, double timeStep, int realizations, String outputDirectory, boolean saveSnapshots, double minTimeToCalculateVelocity, int initialHumans, int initialZombies, double humanSpeed, double zombieSpeed, double contactDuration, double probabilityInfection, double minRadius, double maxRadius, double relaxationTime) {
         this.cpmBeta = cpmBeta;
         this.az = az;
         this.bz = bz;
@@ -50,10 +55,13 @@ public class Config {
         this.bh = bh;
         this.aw = aw;
         this.bw = bw;
+        this.nH = nH;
+        this.nZ = nZ;
         this.noiseDir = noiseDir;
         this.arenaRadius = arenaRadius;
         this.simulationTime = simulationTime;
         this.currentTime = currentTime;
+        this.probabilities = probabilities;
         this.timeStep = timeStep;
         this.realizations = realizations;
         this.outputDirectory = outputDirectory;
@@ -78,10 +86,13 @@ public class Config {
         this.bh = config.bh;
         this.aw = config.aw;
         this.bw = config.bw;
+        this.nH = config.nH;
+        this.nZ = config.nZ;
         this.noiseDir = config.noiseDir;
         this.arenaRadius = config.arenaRadius;
         this.simulationTime = config.simulationTime;
         this.currentTime = config.currentTime;
+        this.probabilities = config.probabilities;
         this.timeStep = config.timeStep;
         this.realizations = config.realizations;
         this.outputDirectory = config.outputDirectory;
@@ -297,5 +308,29 @@ public class Config {
 
     public void setRelaxationTime(double relaxationTime) {
         this.relaxationTime = relaxationTime;
+    }
+
+    public double getnH() {
+        return nH;
+    }
+
+    public void setnH(double nH) {
+        this.nH = nH;
+    }
+
+    public double getnZ() {
+        return nZ;
+    }
+
+    public void setnZ(double nZ) {
+        this.nZ = nZ;
+    }
+
+    public List<Double> getProbabilities() {
+        return probabilities;
+    }
+
+    public void setProbabilities(List<Double> probabilities) {
+        this.probabilities = probabilities;
     }
 }
