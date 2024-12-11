@@ -24,6 +24,8 @@ public class App {
 
         // Notificar las configuraciones
         System.out.println("Configuraciones: " + config.getProbabilities());
+        System.out.println("Humanos: " + config.getInitialHumans());
+        System.out.println("Zombies: " + config.getInitialZombies());
         System.out.println("realizaciones: " + config.getRealizations());
 
         // Ejecutar múltiples realizaciones

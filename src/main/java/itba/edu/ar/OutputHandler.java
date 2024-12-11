@@ -36,8 +36,14 @@ public class OutputHandler {
 
     public static void saveVelocitiesAndPercentages(String outputDirectory, Simulation simulation) throws IOException {
         List<SimulationSnapshot> snapshots = simulation.getSnapshots();
-        String velFilename = outputDirectory + "/realization_" + simulation.getConfig().getProbabilityInfection() + "_"
-                + simulation.getRealizationNumber() + "_vel.csv";
+        String velFilename;
+        if (simulation.getConfig().isOrianaAnalysis()) {    
+            velFilename = outputDirectory + "/realization_" + simulation.getConfig().getProbabilityInfection() + "_"
+                    + simulation.getRealizationNumber() + "_" + simulation.getConfig().getInitialHumans() + "humans_vel.csv";
+        } else {
+            velFilename = outputDirectory + "/realization_" + simulation.getConfig().getProbabilityInfection() + "_"
+                    + simulation.getRealizationNumber() + "_vel.csv";
+        }
         FileWriter velCsvWriter = new FileWriter(velFilename);
 
         // Write header

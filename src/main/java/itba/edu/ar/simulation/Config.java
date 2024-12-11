@@ -30,6 +30,7 @@ public class Config {
     private boolean saveVelocitiesAndPercentages;
     private boolean savePositions;
     private boolean saveFinishStates;
+    private boolean orianaAnalysis;
     private double minTimeToCalculateVelocity;
 
     // Zombies/Humans Parameters
@@ -52,7 +53,7 @@ public class Config {
             double nZ, double noiseDir, double arenaRadius, double simulationTime, double currentTime,
             List<Double> probabilities, double timeStep, int realizations, String outputDirectory,
             boolean saveVelocitiesAndPercentages, boolean savePositions, boolean saveFinishStates,
-            double minTimeToCalculateVelocity, int initialHumans, int initialZombies, double humanSpeed,
+            boolean orianaAnalysis, double minTimeToCalculateVelocity, int initialHumans, int initialZombies, double humanSpeed,
             double zombieSpeed, double contactDuration, double probabilityInfection, double minRadius, double maxRadius,
             double relaxationTime) {
         this.cpmBeta = cpmBeta;
@@ -75,6 +76,7 @@ public class Config {
         this.saveVelocitiesAndPercentages = saveVelocitiesAndPercentages;
         this.savePositions = savePositions;
         this.saveFinishStates = saveFinishStates;
+        this.orianaAnalysis = orianaAnalysis;
         this.minTimeToCalculateVelocity = minTimeToCalculateVelocity;
         this.initialHumans = initialHumans;
         this.initialZombies = initialZombies;
@@ -108,6 +110,7 @@ public class Config {
         this.saveVelocitiesAndPercentages = config.saveVelocitiesAndPercentages;
         this.savePositions = config.savePositions;
         this.saveFinishStates = config.saveFinishStates;
+        this.orianaAnalysis = config.orianaAnalysis;
         this.minTimeToCalculateVelocity = config.minTimeToCalculateVelocity;
         this.initialHumans = config.initialHumans;
         this.initialZombies = config.initialZombies;
@@ -120,6 +123,7 @@ public class Config {
         this.relaxationTime = config.relaxationTime;
     }
 
+    
     public double getCpmBeta() {
         return cpmBeta;
     }
@@ -358,5 +362,13 @@ public class Config {
 
     public void setSaveFinishStates(boolean saveFinishStates) {
         this.saveFinishStates = saveFinishStates;
+    }
+
+    public boolean isOrianaAnalysis() {
+        return orianaAnalysis;
+    }
+
+    public void setOrianaAnalysis(boolean orianaAnalysis) {
+        this.orianaAnalysis = orianaAnalysis;
     }
 }
