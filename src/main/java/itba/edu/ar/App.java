@@ -24,7 +24,7 @@ public class App {
 
         // Notificar las configuraciones
         System.out.println("Configuraciones: " + config.getProbabilities());
-        System.out.println("Humanos: " + config.getInitialHumans());
+        System.out.println("Humanos: " + config.getInitialHumansList());
         System.out.println("Zombies: " + config.getInitialZombies());
         System.out.println("realizaciones: " + config.getRealizations());
 
@@ -33,8 +33,11 @@ public class App {
         List<Double> probabilities = config.getProbabilities();
         List<FinishState> finishStates = Collections.synchronizedList(new ArrayList<>());
 
+        // Ejecutar varias cantidades de humanos iniciales
+        List<Integer> initialHumans = config.getInitialHumansList();
+
         long startTime = System.currentTimeMillis();
-        int totalSimulations = probabilities.size() * realizations;
+        int totalSimulations = probabilities.size() * realizations * initialHumans.size();
         AtomicInteger completedSimulations = new AtomicInteger(0);
 
         // Create thread pool
@@ -42,82 +45,88 @@ public class App {
         ExecutorService executor = Executors.newFixedThreadPool(processors);
         CountDownLatch latch = new CountDownLatch(totalSimulations);
 
-        for (Double probability : probabilities) {
-            config.setProbabilityInfection(probability);
+        for (Integer nH : initialHumans) {
+            config.setInitialHumans(nH);
 
-            // Submit all realizations for this probability
-            for (int realization = 1; realization <= realizations; realization++) {
-                final int currentRealization = realization;
-                executor.submit(() -> {
-                    try {
-                        // Inicializar simulación
-                        Config configCopy = new Config(config);
-                        configCopy.setProbabilityInfection(probability);
-                        Simulation simulation = new Simulation(configCopy, currentRealization);
+            for (Double probability : probabilities) {
+                config.setProbabilityInfection(probability);
 
-                        // Ejecutar simulación
-                        FinishState finishState = simulation.run();
-                        finishStates.add(finishState);
+                // Submit all realizations for this probability
+                for (int realization = 1; realization <= realizations; realization++) {
+                    final int currentRealization = realization;
+                    executor.submit(() -> {
+                        try {
+                            // Inicializar simulación
+                            Config configCopy = new Config(config);
+                            configCopy.setProbabilityInfection(probability);
+                            configCopy.setInitialHumans(nH);
+                            Simulation simulation = new Simulation(configCopy, currentRealization);
 
-                        // Guardar resultados
-                        if (config.isSavePositions()) {
-                            try {
-                                OutputHandler.savePositions(config.getOutputDirectory(), simulation);
-                            } catch (IOException e) {
-                                System.err.println(
-                                        "Error al guardar los resultados: " + e.getMessage());
+                            // Ejecutar simulación
+                            FinishState finishState = simulation.run();
+                            finishStates.add(finishState);
+
+                            // Guardar resultados
+                            if (configCopy.isSavePositions()) {
+                                try {
+                                    OutputHandler.savePositions(configCopy.getOutputDirectory(), simulation);
+                                } catch (IOException e) {
+                                    System.err.println(
+                                            "Error al guardar los resultados: " + e.getMessage());
+                                }
                             }
-                        }
 
-                        if (config.isSaveVelocitiesAndPercentages()) {
-                            try {
-                                OutputHandler.saveVelocitiesAndPercentages(config.getOutputDirectory(),
-                                        simulation);
-                            } catch (IOException e) {
-                                System.err.println(
-                                        "Error al guardar los resultados: " + e.getMessage());
+                            if (configCopy.isSaveVelocitiesAndPercentages()) {
+                                try {
+                                    OutputHandler.saveVelocitiesAndPercentages(configCopy.getOutputDirectory(),
+                                            simulation);
+                                } catch (IOException e) {
+                                    System.err.println(
+                                            "Error al guardar los resultados: " + e.getMessage());
+                                }
                             }
-                        }
 
-                        // Update progress
-                        int completed = completedSimulations.incrementAndGet();
-                        int progressBarWidth = 50;
-                        int progress = (int) ((double) completed / totalSimulations * progressBarWidth);
+                            // Update progress
+                            int completed = completedSimulations.incrementAndGet();
+                            int progressBarWidth = 50;
+                            int progress = (int) ((double) completed / totalSimulations * progressBarWidth);
 
-                        // Calculate ETA
-                        long currentTime = System.currentTimeMillis();
-                        long elapsedTime = currentTime - startTime;
-                        long estimatedTotalTime = (long) ((double) elapsedTime / completed
-                                * totalSimulations);
-                        long remainingTime = estimatedTotalTime - elapsedTime;
-                        long remainingMinutes = remainingTime / (1000 * 60);
-                        long remainingSeconds = (remainingTime / 1000) % 60;
+                            // Calculate ETA
+                            long currentTime = System.currentTimeMillis();
+                            long elapsedTime = currentTime - startTime;
+                            long estimatedTotalTime = (long) ((double) elapsedTime / completed
+                                    * totalSimulations);
+                            long remainingTime = estimatedTotalTime - elapsedTime;
+                            long remainingMinutes = remainingTime / (1000 * 60);
+                            long remainingSeconds = (remainingTime / 1000) % 60;
 
-                        // Print progress bar
-                        StringBuilder progressBar = new StringBuilder("\r[");
-                        for (int i = 0; i < progressBarWidth; i++) {
-                            if (i < progress) {
-                                progressBar.append("█");
-                            } else {
-                                progressBar.append(" ");
+                            // Print progress bar
+                            StringBuilder progressBar = new StringBuilder("\r[");
+                            for (int i = 0; i < progressBarWidth; i++) {
+                                if (i < progress) {
+                                    progressBar.append("█");
+                                } else {
+                                    progressBar.append(" ");
+                                }
                             }
-                        }
-                        progressBar.append(String.format("] %d%% (P=%.2f, R=%d/%d) ETA: %dm %ds",
-                                (int) ((double) completed / totalSimulations * 100),
-                                probability,
-                                currentRealization,
-                                realizations,
-                                remainingMinutes,
-                                remainingSeconds));
+                            progressBar.append(String.format("] %d%% (Nh=%d, P=%.2f, R=%d/%d) ETA: %dm %ds",
+                                    (int) ((double) completed / totalSimulations * 100),
+                                    nH,
+                                    probability,
+                                    currentRealization,
+                                    realizations,
+                                    remainingMinutes,
+                                    remainingSeconds));
 
-                        synchronized (System.out) {
-                            System.out.print(progressBar);
-                        }
+                            synchronized (System.out) {
+                                System.out.print(progressBar);
+                            }
 
-                    } finally {
-                        latch.countDown();
-                    }
-                });
+                        } finally {
+                            latch.countDown();
+                        }
+                    });
+                }
             }
         }
 

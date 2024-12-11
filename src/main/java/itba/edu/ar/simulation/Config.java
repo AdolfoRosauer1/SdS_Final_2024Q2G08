@@ -34,6 +34,7 @@ public class Config {
     private double minTimeToCalculateVelocity;
 
     // Zombies/Humans Parameters
+    private List<Integer> initialHumansList;
     private int initialHumans;
     private int initialZombies;
     private double humanSpeed;
@@ -53,7 +54,7 @@ public class Config {
             double nZ, double noiseDir, double arenaRadius, double simulationTime, double currentTime,
             List<Double> probabilities, double timeStep, int realizations, String outputDirectory,
             boolean saveVelocitiesAndPercentages, boolean savePositions, boolean saveFinishStates,
-            boolean orianaAnalysis, double minTimeToCalculateVelocity, int initialHumans, int initialZombies, double humanSpeed,
+            boolean orianaAnalysis, double minTimeToCalculateVelocity, int initialHumans, List<Integer> initialHumansList, int initialZombies, double humanSpeed,
             double zombieSpeed, double contactDuration, double probabilityInfection, double minRadius, double maxRadius,
             double relaxationTime) {
         this.cpmBeta = cpmBeta;
@@ -113,6 +114,7 @@ public class Config {
         this.orianaAnalysis = config.orianaAnalysis;
         this.minTimeToCalculateVelocity = config.minTimeToCalculateVelocity;
         this.initialHumans = config.initialHumans;
+        this.initialHumansList = config.initialHumansList;
         this.initialZombies = config.initialZombies;
         this.humanSpeed = config.humanSpeed;
         this.zombieSpeed = config.zombieSpeed;
@@ -123,6 +125,7 @@ public class Config {
         this.relaxationTime = config.relaxationTime;
     }
 
+    
     
     public double getCpmBeta() {
         return cpmBeta;
@@ -370,5 +373,13 @@ public class Config {
 
     public void setOrianaAnalysis(boolean orianaAnalysis) {
         this.orianaAnalysis = orianaAnalysis;
+    }
+
+    public List<Integer> getInitialHumansList() {
+        return initialHumansList;
+    }
+
+    public void setInitialHumansList(List<Integer> initialHumansList) {
+        this.initialHumansList = initialHumansList;
     }
 }
