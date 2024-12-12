@@ -49,3 +49,8 @@ src/main/java/itba/edu/ar/examples/Player.java
 
 ### Animation ###
 analysis/animation/exports
+
+*.png
+*.gif
+*.json
+*.csv

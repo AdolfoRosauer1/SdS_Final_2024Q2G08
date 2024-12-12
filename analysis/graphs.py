@@ -35,7 +35,7 @@ def plot_zombie_percentage_over_time(df, labels: bool = False, amount: int = 25)
     max_time = df['Time'].max()
     plt.xlabel('Tiempo (s)', fontsize=fontsize)
     plt.ylabel('Porcentaje de Zombies (%)', fontsize=fontsize)
-    plt.ylim(0, 1)
+    plt.ylim(-0.05, 1.05)
     plt.xlim(0, 2050)
     if labels:
         plt.legend(fontsize=fontsize)
@@ -52,7 +52,7 @@ def plot_mean_zombie_percentage_over_time(df):
 
     plt.xlabel('Tiempo (s)', fontsize=fontsize)
     plt.ylabel('Porcentaje de Zombies (%)', fontsize=fontsize)
-    plt.ylim(0, 1)
+    plt.ylim(-0.05, 1.05)
     plt.xlim(0, 2050)
     plt.show()
 
@@ -68,7 +68,7 @@ def plot_mean_zombie_percentage_over_time_multiple_dfs(dfs: list[pd.DataFrame], 
         plt.fill_between(grouped.index, grouped.values - sem, grouped.values + sem, alpha=0.3, color=color)
     plt.xlabel('Tiempo (s)', fontsize=fontsize)
     plt.ylabel('Porcentaje de Zombies (%)', fontsize=fontsize)
-    plt.ylim(0, 1)
+    plt.ylim(-0.05, 1.05)
     plt.xlim(0, 2050)
     plt.legend(fontsize=fontsize)
     plt.show()
@@ -100,7 +100,7 @@ def plot_comparison_between_probabilities_single_df(df: pd.DataFrame):
     max_time = df['Time'].max()
     plt.xlabel('Tiempo (s)', fontsize=fontsize)
     plt.ylabel('Porcentaje de Zombies (%)', fontsize=fontsize)
-    plt.ylim(0, 1)
+    plt.ylim(-0.05, 1.05)
     plt.xlim(0, 2050)
     plt.legend(fontsize=fontsize)
     plt.show()
@@ -127,7 +127,7 @@ def plot_comparison_between_probabilities(dfs: list[pd.DataFrame], probabilities
     max_time = max(df['Time'].max() for df in dfs)
     plt.xlabel('Tiempo (s)', fontsize=fontsize)
     plt.ylabel('Porcentaje de Zombies (%)', fontsize=fontsize)
-    plt.ylim(0, 1)
+    plt.ylim(-0.05, 1.05)
     plt.xlim(0, 2050)
     plt.legend(fontsize=fontsize)
     plt.show()
@@ -215,8 +215,8 @@ def plot_probability_vs_zombie_percentage(dfs: list[pd.DataFrame], probabilities
 
     plt.xlabel('Probabilidad de infección', fontsize=fontsize)
     plt.ylabel('Porcentaje final de Zombies (%)', fontsize=fontsize)
-    plt.legend(fontsize=fontsize)
-    plt.ylim(0, 1)
+    # plt.legend(fontsize=fontsize)
+    plt.ylim(-0.05, 1.05)
     plt.show()
 
 def plot_probability_vs_velocity(dfs: list[pd.DataFrame], probabilities: list[float]):
@@ -243,7 +243,7 @@ def plot_probability_vs_velocity(dfs: list[pd.DataFrame], probabilities: list[fl
 
     plt.xlabel('Probabilidad de infección', fontsize=fontsize)
     plt.ylabel('Velocidad promedio (m/s)', fontsize=fontsize)
-    plt.legend(fontsize=fontsize)
+    # plt.legend(fontsize=fontsize)
     plt.ylim(0, 4.5)
     plt.show()
 
